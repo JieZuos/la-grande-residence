@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 
 interface Promo {
@@ -14,7 +14,7 @@ interface Promo {
 
 const API_URL = "https://lagranderesidence.com/api/api.php?endpoint=promos";
 const CACHE_KEY = "lgr_promo_logic_cache";
-const LAST_SHOWN_KEY = "lgr_promo_last_shown"; // 👈 new: tracks last display date
+const LAST_SHOWN_KEY = "lgr_promo_last_shown";
 const SHOW_DELAY = 5000;
 
 function isPromoEqual(cached: Promo, api: Promo): boolean {
@@ -36,8 +36,8 @@ function isPromoArrayEqual(cached: Promo[], api: Promo[]): boolean {
   return sortedCached.every((promo, index) => isPromoEqual(promo, sortedApi[index]));
 }
 
-/** Returns true if promos were already shown today */
 function hasShownToday(): boolean {
+  if (typeof window === "undefined") return false;
   const lastShown = localStorage.getItem(LAST_SHOWN_KEY);
   if (!lastShown) return false;
 
@@ -51,8 +51,8 @@ function hasShownToday(): boolean {
   );
 }
 
-/** Mark promos as shown for today */
 function markShownToday(): void {
+  if (typeof window === "undefined") return;
   localStorage.setItem(LAST_SHOWN_KEY, new Date().toISOString());
 }
 
@@ -60,13 +60,22 @@ export default function PromoPopup() {
   const [activePromos, setActivePromos] = useState<Promo[]>([]);
   const [popupIndex, setPopupIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const isAnimating = useRef(false);
 
+  // Mount gate to prevent hydration mismatch with useLayoutEffect-like behavior
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Load promos
+  useEffect(() => {
+    if (!isMounted) return;
+
     async function loadPromos() {
-      // 👉 If already shown today, bail immediately — no fetch, no delay
       if (hasShownToday()) return;
 
       const now = new Date();
@@ -106,110 +115,260 @@ export default function PromoPopup() {
           cachedValidPromos.length === 0 ||
           !isPromoArrayEqual(cachedValidPromos, validPromos);
 
+        const promosToShow = hasChanged ? validPromos : cachedValidPromos;
         if (hasChanged) {
           localStorage.setItem(CACHE_KEY, JSON.stringify(validPromos));
-          setActivePromos(validPromos);
-          setPopupIndex(0);
-          setTimeout(() => {
-            setIsVisible(true);
-            markShownToday(); // 👈 mark as shown when popup actually appears
-          }, SHOW_DELAY);
-        } else {
-          setActivePromos(cachedValidPromos);
-          setTimeout(() => {
-            setIsVisible(true);
-            markShownToday(); // 👈 same here
-          }, SHOW_DELAY);
         }
+
+        setActivePromos(promosToShow);
+        setPopupIndex(0);
+
+        setTimeout(() => {
+          setIsVisible(true);
+          markShownToday();
+        }, SHOW_DELAY);
       } catch (error) {
         console.error("Promo fetch error:", error);
         if (cachedValidPromos.length > 0) {
           setActivePromos(cachedValidPromos);
           setTimeout(() => {
             setIsVisible(true);
-            markShownToday(); // 👈 and here
+            markShownToday();
           }, SHOW_DELAY);
         }
       }
     }
 
     loadPromos();
-  }, []);
+  }, [isMounted]);
 
-  useLayoutEffect(() => {
-    if (!isVisible || !popupRef.current) return;
+  // Entrance animation when popup becomes visible
+  useEffect(() => {
+    if (!isVisible || !popupRef.current || !overlayRef.current) return;
 
-    gsap
-      .timeline()
-      .fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 })
-      .fromTo(
-        popupRef.current,
-        { scale: 0.85, opacity: 0, y: 40 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.7)" },
-        "-=0.2"
-      );
-  }, [isVisible, popupIndex]);
+    const tl = gsap.timeline();
+    tl.fromTo(
+      overlayRef.current,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.4 }
+    ).fromTo(
+      popupRef.current,
+      { scale: 0.85, opacity: 0, y: 40 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.7)" },
+      "-=0.2"
+    );
 
-  const nextPromo = () => {
-    if (popupIndex < activePromos.length - 1) {
-      gsap.to(overlayRef.current, {
+    return () => {
+      tl.kill();
+    };
+  }, [isVisible]);
+
+  // Navigation with slide animation
+  const goToPromo = useCallback(
+    (direction: "next" | "prev") => {
+      if (isAnimating.current || activePromos.length <= 1) return;
+
+      const newIndex =
+        direction === "next"
+          ? Math.min(popupIndex + 1, activePromos.length - 1)
+          : Math.max(popupIndex - 1, 0);
+
+      if (newIndex === popupIndex) return;
+
+      isAnimating.current = true;
+
+      gsap.to(popupRef.current, {
+        x: direction === "next" ? -60 : 60,
         opacity: 0,
-        duration: 0.3,
+        duration: 0.25,
+        ease: "power2.in",
         onComplete: () => {
-          setPopupIndex((prev) => prev + 1);
-          gsap.set(overlayRef.current, { opacity: 1 });
+          setPopupIndex(newIndex);
+          gsap.fromTo(
+            popupRef.current,
+            { x: direction === "next" ? 60 : -60, opacity: 0 },
+            {
+              x: 0,
+              opacity: 1,
+              duration: 0.35,
+              ease: "power2.out",
+              onComplete: () => {
+                isAnimating.current = false;
+              },
+            }
+          );
         },
       });
-    } else {
-      closeAll();
-    }
-  };
+    },
+    [popupIndex, activePromos.length]
+  );
 
-  const closeAll = () => {
+  const goToIndex = useCallback(
+    (index: number) => {
+      if (isAnimating.current || index === popupIndex || activePromos.length <= 1) return;
+
+      const direction = index > popupIndex ? "next" : "prev";
+      isAnimating.current = true;
+
+      gsap.to(popupRef.current, {
+        x: direction === "next" ? -60 : 60,
+        opacity: 0,
+        duration: 0.25,
+        ease: "power2.in",
+        onComplete: () => {
+          setPopupIndex(index);
+          gsap.fromTo(
+            popupRef.current,
+            { x: direction === "next" ? 60 : -60, opacity: 0 },
+            {
+              x: 0,
+              opacity: 1,
+              duration: 0.35,
+              ease: "power2.out",
+              onComplete: () => {
+                isAnimating.current = false;
+              },
+            }
+          );
+        },
+      });
+    },
+    [popupIndex, activePromos.length]
+  );
+
+  const closeAll = useCallback(() => {
+    if (!overlayRef.current) return;
     gsap.to(overlayRef.current, {
       opacity: 0,
       duration: 0.3,
       onComplete: () => setIsVisible(false),
     });
-  };
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goToPromo("next");
+      if (e.key === "ArrowLeft") goToPromo("prev");
+      if (e.key === "Escape") closeAll();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isVisible, goToPromo, closeAll]);
 
   const currentPromo = activePromos[popupIndex];
-  if (!isVisible || !currentPromo) return null;
+  if (!isMounted || !isVisible || !currentPromo) return null;
+
+  const hasPrev = popupIndex > 0;
+  const hasNext = popupIndex < activePromos.length - 1;
+  const total = activePromos.length;
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-md p-4"
-      onClick={nextPromo}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md p-4"
+      style={{ opacity: 0 }}
     >
-      <div
-        ref={popupRef}
-        className="relative pointer-events-auto"
-        onClick={(e) => e.stopPropagation()}
+      {/* Close All X Button */}
+      <button
+        onClick={closeAll}
+        className="absolute top-4 right-4 z-20 w-11 h-11 bg-white text-gray-800 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:bg-gray-100 active:scale-95 transition-all duration-200"
+        aria-label="Close all promos"
       >
-        <button
-          onClick={nextPromo}
-          className="absolute -top-3 -right-3 z-10 w-10 h-10 bg-white text-black rounded-full shadow-xl flex items-center justify-center font-bold hover:scale-110 transition-transform"
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          →
-        </button>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
 
+      {/* Navigation: Previous */}
+      {hasPrev && (
+        <button
+          onClick={() => goToPromo("prev")}
+          className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 text-gray-800 rounded-full shadow-xl flex items-center justify-center hover:scale-110 hover:bg-white active:scale-95 transition-all duration-200"
+          aria-label="Previous promo"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+      )}
+
+      {/* Popup Content */}
+      <div ref={popupRef} className="relative pointer-events-auto" style={{ opacity: 0 }}>
         <img
           src={currentPromo.image}
           alt="Promotion"
-          className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl drop-shadow-2xl"
+          className="max-h-[80vh] max-w-[85vw] md:max-w-[70vw] object-contain rounded-2xl shadow-2xl"
+          draggable={false}
         />
       </div>
 
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          closeAll();
-        }}
-        className="mt-6 text-white text-sm underline cursor-pointer hover:opacity-80"
-      >
-        Close all
-      </div>
+      {/* Navigation: Next */}
+      {hasNext && (
+        <button
+          onClick={() => goToPromo("next")}
+          className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 text-gray-800 rounded-full shadow-xl flex items-center justify-center hover:scale-110 hover:bg-white active:scale-95 transition-all duration-200"
+          aria-label="Next promo"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      )}
+
+      {/* Pagination Dots + Counter */}
+      {total > 1 && (
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            {activePromos.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goToIndex(idx)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  idx === popupIndex
+                    ? "bg-white w-6"
+                    : "bg-white/40 w-2 hover:bg-white/70"
+                }`}
+                aria-label={`Go to promo ${idx + 1}`}
+              />
+            ))}
+          </div>
+          <div className="text-white/60 text-xs font-medium tracking-wide">
+            {popupIndex + 1} / {total}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
