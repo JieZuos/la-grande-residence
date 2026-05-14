@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/web-dev/Documents/New%20Projects/lgr_next/app/360/TourRedirect.tsx"],"sourcesContent":["// app/360/TourRedirect.tsx\n'use client';\n\nimport { useSearchParams, useRouter } from 'next/navigation';\nimport { useEffect } from 'react';\n\nexport default function TourRedirect() {\n  const searchParams = useSearchParams();\n  const router = useRouter();\n  \n  useEffect(() => {\n    // Redirect to default scene\n    router.push('/360/roadside/');\n  }, [router]);\n  \n  return <div>Redirecting to tour...</div>;\n}"],"names":[],"mappings":"AAAA,2BAA2B;;;;;;AAG3B;AACA;AAHA;;;;AAKe,SAAS;IACtB,MAAM,eAAe,IAAA,qJAAe;IACpC,MAAM,SAAS,IAAA,+IAAS;IAExB,IAAA,kNAAS,EAAC;QACR,4BAA4B;QAC5B,OAAO,IAAI,CAAC;IACd,GAAG;QAAC;KAAO;IAEX,qBAAO,8OAAC;kBAAI;;;;;;AACd"}}]
+}
