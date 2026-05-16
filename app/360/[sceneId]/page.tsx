@@ -2,6 +2,7 @@
 import scenesData from '@/components/360/data/scenes.json'
 import Viewer from '@/components/360/Viewer'
 import { notFound } from 'next/navigation'
+import Navbar from '@/components/Navbar';
 
 export function generateStaticParams() {
   return scenesData.scenes.map((scene) => ({
@@ -23,9 +24,12 @@ export default async function Page({
   if (!scene) return notFound()
 
   return (
+    <>
+          <Navbar />
+
     <Viewer
       scenes={scenesData.scenes}
       initialSceneId={scene.id}
-    />
+    /></>
   )
 }

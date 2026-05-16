@@ -101,7 +101,7 @@ const Navbar = ({ heroRef }: NavbarProps) => {
     // Refresh the page after animation completes
     setTimeout(() => {
       window.location.href = href;
-    }, 2000);
+    }, 1850);
   };
 
   const menuItems = [
