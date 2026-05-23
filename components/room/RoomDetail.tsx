@@ -14,6 +14,7 @@ import { format, addDays, isAfter, differenceInDays, parseISO } from 'date-fns';
 import toast, { Toaster } from 'react-hot-toast';
 import { BackButton } from '@/components/providers/backbutton';
 import { useRouter } from 'next/navigation';
+import { Footer } from '@/components/Footer';
 
 // Map the old FontAwesome icons to new Lucide icons
 const Icon = ({ name, className }: { name: keyof typeof IconMapping; className?: string }) => {
@@ -864,7 +865,9 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
             </div>
           </aside>
         </div>
+        
       </div>
+              <Footer />
 
       {/* ============================================
           NEW CONFIRMATION MODAL - REPLACEMENT
@@ -1071,79 +1074,12 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                   </button>
                 </div>
               </div>
+              <Footer />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ============================================
-          OLD CONFIRMATION MODAL - COMMENTED OUT
-          ============================================
-      
-      <AnimatePresence>
-        {confirmModalOpen && formPayload && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
-              <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-neutral-50">
-                <h3 className="font-black text-xl text-neutral-900">Confirm Booking</h3>
-                <button onClick={() => setConfirmModalOpen(false)} className="p-2 hover:bg-white rounded-full transition-colors"><X className="w-5 h-5" /></button>
-              </div>
-
-              <div className="p-6 space-y-6">
-                <div className="bg-neutral-50 rounded-2xl p-4 space-y-3">
-                  <div className="flex justify-between text-sm"><span className="text-neutral-500">Stay Duration:</span><span className="font-bold text-neutral-900">{formPayload.count} {bookingMode === 'daily' ? 'Nights' : 'Months'}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-neutral-500">Check-in:</span><span className="font-bold text-neutral-900">{format(formPayload.check_in, 'MMMM dd, yyyy')}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-neutral-500">Room Count:</span><span className="font-bold text-neutral-900">{formPayload.room_count} Room(s)</span></div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-neutral-400 mb-3 block tracking-widest">Select Payment Method</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => setSelectedPayment("gcash")} className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-3 transition-all ${selectedPayment === 'gcash' ? 'border-blue-500 bg-blue-50/50' : 'border-neutral-100 hover:border-neutral-200'}`}>
-                      <div className="h-8 w-12 bg-contain bg-no-center bg-center" style={{ backgroundImage: 'url(https://images.seeklogo.com/logo-png/52/2/gcash-logo-png_seeklogo-522261.png)' }} />
-                      <span className="text-xs font-bold text-neutral-700">GCash</span>
-                    </button>
-                    <button onClick={() => setSelectedPayment("metrobank")} className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-3 transition-all ${selectedPayment === 'metrobank' ? 'border-blue-900 bg-blue-50/50' : 'border-neutral-100 hover:border-neutral-200'}`}>
-                      <div className="h-8 w-12 bg-contain bg-no-center bg-center" style={{ backgroundImage: 'url(https://companieslogo.com/img/orig/MTPOY-1a51b472.png?t=1720244493)' }} />
-                      <span className="text-xs font-bold text-neutral-700">Metrobank</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-neutral-900 rounded-2xl p-5 text-white shadow-xl shadow-neutral-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium opacity-70">Final Amount</span>
-                    <span className="text-2xl font-black">₱{formatPrice(total)}</span>
-                  </div>
-                </div>
-
-                <button
-                  disabled={!selectedPayment}
-                  onClick={() => {
-                    const submitPromise = fetch("https://lagranderesidence.com/api/api.php?endpoint=booking", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ ...formPayload, payment_method: selectedPayment, room_id: room.id })
-                    }).then(res => res.json());
-
-                    toast.promise(submitPromise, {
-                      loading: 'Processing booking...',
-                      success: 'Booking Request Sent!',
-                      error: 'Failed to process booking.'
-                    });
-                    setConfirmModalOpen(false);
-                  }}
-                  className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:bg-neutral-200 disabled:text-neutral-400 text-white rounded-2xl font-black text-lg transition-all shadow-lg shadow-green-100"
-                >
-                  {selectedPayment ? `Pay with ${selectedPayment.toUpperCase()}` : 'Select Payment'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      
-      */}
-    </motion.div>
+          </motion.div>
   );
 }
