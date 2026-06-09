@@ -346,95 +346,95 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                 dangerouslySetInnerHTML={{ __html: room.description || "" }}
               />
 
-              {/* Amenities */}
-<div className="grid sm:grid-cols-2 gap-6 mt-8">
-  {/* Daily Rate */}
-  <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-    <h3 className="font-semibold text-lg flex items-center justify-between">
-      <span className="flex items-center gap-2">
-        <Icon name="faBed" className="w-5 h-5 text-green-700" />
-        Daily Rate
-      </span>
+{/* Amenities */}
+            <div className="grid sm:grid-cols-2 gap-6 mt-8">
+{/* Daily Rate */}
+              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                <h3 className="font-semibold text-lg flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Icon name="faBed" className="w-5 h-5 text-green-700" />
+                    Daily Rate
+                  </span>
 
-      <span className="text-green-700 font-bold text-xl">
-        {formatPrice(room.daily_price)}
-      </span>
-    </h3>
+                  <span className="text-green-700 font-bold text-xl">
+                    {formatPrice(room.daily_price)}
+                  </span>
+                </h3>
 
-    <p className="text-sm text-gray-500 mt-1 mb-4">
-      Inclusive of the following:
-    </p>
+                <p className="text-sm text-gray-500 mt-1 mb-4">
+                  Inclusive of the following:
+                </p>
 
-    <ul className="text-gray-700 text-sm space-y-2">
-      <li className="flex items-center gap-2">
-        <Icon name="faBroom" className="w-4 h-4 text-green-700" />
-        Room Cleaning
-      </li>
+                <ul className="text-gray-700 text-sm space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Icon name="faBroom" className="w-4 h-4 text-green-700" />
+                    Room Cleaning
+                  </li>
 
-      <li className="flex items-center gap-2">
-        <Icon name="faWater" className="w-4 h-4 text-green-700" />
-        Water & Electricity
-      </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="faWater" className="w-4 h-4 text-green-700" />
+                    Water & Electricity
+                  </li>
 
-      <li className="flex items-center gap-2">
-        <Icon name="faTv" className="w-4 h-4 text-green-700" />
-        TV Cable & Internet
-      </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="faTv" className="w-4 h-4 text-green-700" />
+                    TV Cable & Internet
+                  </li>
 
-      <li className="flex items-center gap-2">
-        <Icon name="faMugHot" className="w-4 h-4 text-green-700" />
-        Coffee Setup
-      </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="faMugHot" className="w-4 h-4 text-green-700" />
+                    Coffee Setup
+                  </li>
 
-      <li className="flex items-center gap-2">
-        <Icon name="faBed" className="w-4 h-4 text-green-700" />
-        Linen & Towels
-      </li>
-    </ul>
-  </div>
+                  <li className="flex items-center gap-2">
+                    <Icon name="faBed" className="w-4 h-4 text-green-700" />
+                    Linen & Towels
+                  </li>
+                </ul>
+              </div>
 
-  {/* Monthly Rate */}
-  <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-    <h3 className="font-semibold text-lg flex items-center justify-between">
-      <span className="flex items-center gap-2">
-        <Icon name="faBed" className="w-5 h-5 text-green-700" />
-        Monthly Rate
-      </span>
+{/* Monthly Rate */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+              <h3 className="font-semibold text-lg flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Icon name="faBed" className="w-5 h-5 text-green-700" />
+                  Monthly Rate
+                </span>
 
-      <div className="text-right">
-        <div className="text-green-700 font-bold text-xl">
-          {formatPrice(room.monthly_price)}
-        </div>
+                <div className="text-right">
+                  <div className="text-green-700 font-bold text-xl">
+                    {formatPrice(room.monthly_price)}
+                  </div>
 
-        <div className="text-xs text-gray-500">
-          per 30 nights
-        </div>
-      </div>
-    </h3>
+                  <div className="text-xs text-gray-500">
+                    per 30 nights
+                  </div>
+                </div>
+              </h3>
 
-    <p className="text-sm text-gray-500 mt-1 mb-4">
-      Monthly inclusions & utilities:
-    </p>
+              <p className="text-sm text-gray-500 mt-1 mb-4">
+                Monthly inclusions & utilities:
+              </p>
 
-    <ul className="text-gray-700 text-sm space-y-2">
-      <li className="flex items-center gap-2">
-        <Icon name="faPlug" className="w-4 h-4 text-green-700" />
-        Electricity – Meter Reading
-      </li>
+              <ul className="text-gray-700 text-sm space-y-2">
+                <li className="flex items-center gap-2">
+                  <Icon name="faPlug" className="w-4 h-4 text-green-700" />
+                  Electricity – Meter Reading
+                </li>
 
-      <li className="flex items-start gap-2">
-        <Icon name="faWifi" className="w-4 h-4 mt-1 text-green-700" />
+                <li className="flex items-start gap-2">
+                  <Icon name="faWifi" className="w-4 h-4 mt-1 text-green-700" />
 
-        <span>
-          Service Package from ₱7,800 includes cleaning, linen,
-          towels, cable & internet, and up to 3 cubic meters of water.
-        </span>
-      </li>
-    </ul>
-  </div>
-</div>
+                  <span>
+                    Service Package from ₱7,800 includes cleaning, linen,
+                    towels, cable & internet, and up to 3 cubic meters of water.
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
 
-              {/* Policies */}
+{/* Policies */}
               <div className="mt-10 space-y-5 text-gray-700 text-sm">
                 <div>
                   <h3 className="font-semibold text-lg flex items-center gap-2">
