@@ -92,7 +92,7 @@ export function PromoGallery() {
                     const end = new Date(item.end_date);
                     return (
                         Number(item.stat) === 1 &&
-                        Number(item.popup) === 1 &&
+                        // Number(item.popup) === 1 &&
                         !isNaN(start.getTime()) &&
                         !isNaN(end.getTime()) &&
                         now >= start &&

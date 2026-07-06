@@ -220,13 +220,13 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
     return (!dPrice || dPrice === 0) && (!mPrice || mPrice === 0);
   }, [room]);
 
-  const isonline = useMemo(() => {
-    if (!room) return false;
+  // const isonline = useMemo(() => {
+  //   if (!room) return false;
 
-    const stat = Number(room.stat);
+  //   const stat = Number(room.stat);
 
-    return !stat || stat === 2;
-  }, [room]);
+  //   return !stat || stat === 2;
+  // }, [room]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,7 +316,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
           {/* Left Side: Gallery & Info */}
           <div ref={detailsRef} className="lg:col-span-2">
-            <div className="relative aspect-[16/9] bg-neutral-100 rounded-2xl overflow-hidden mb-8 group">
+            {/* <div className="relative aspect-[16/9] bg-neutral-100 rounded-2xl overflow-hidden mb-8 group">
               <AnimatePresence mode="wait">
                 <motion.div key={currentImageIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
                   <ImageWithFallback src={images[currentImageIndex]} alt={room.title || 'Room'} className="w-full h-full object-cover" />
@@ -328,7 +328,85 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                   <button onClick={() => setCurrentImageIndex((p) => (p + 1) % images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"><ChevronRight className="w-5 h-5" /></button>
                 </>
               )}
-            </div>
+            </div> */}
+
+            <div className="mb-10">
+  <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-neutral-100 shadow-sm group">
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={currentImageIndex}
+        initial={{ opacity: 0, scale: 1.02 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.35 }}
+        className="h-full w-full"
+      >
+        <ImageWithFallback
+          src={images[currentImageIndex]}
+          alt={room.title || "Hotel room"}
+          className="h-full w-full object-cover"
+        />
+      </motion.div>
+    </AnimatePresence>
+
+    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+
+    <div className="absolute left-6 bottom-6 text-white">
+      <p className="text-sm uppercase tracking-[0.25em] text-white/80">
+        {room.title || "Hotel Room"}
+      </p>
+    </div>
+
+    <div className="absolute right-6 bottom-6 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-neutral-800 shadow-lg backdrop-blur">
+      {currentImageIndex + 1} / {images.length}
+    </div>
+
+    {images.length > 1 && (
+      <>
+        <button
+          onClick={() =>
+            setCurrentImageIndex((p) => (p - 1 + images.length) % images.length)
+          }
+          className="absolute left-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition hover:bg-white hover:scale-105 opacity-0 group-hover:opacity-100"
+          aria-label="Previous image"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+
+        <button
+          onClick={() => setCurrentImageIndex((p) => (p + 1) % images.length)}
+          className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition hover:bg-white hover:scale-105 opacity-0 group-hover:opacity-100"
+          aria-label="Next image"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </>
+    )}
+  </div>
+
+  {images.length > 1 && (
+    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+      {images.map((image, index) => (
+        <button
+          key={index}
+          onClick={() => setCurrentImageIndex(index)}
+          className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl border transition ${
+            currentImageIndex === index
+              ? "border-neutral-900 opacity-100"
+              : "border-transparent opacity-70 hover:opacity-100"
+          }`}
+          aria-label={`View room image ${index + 1}`}
+        >
+          <ImageWithFallback
+            src={image}
+            alt={`${room.title || "Hotel room"} ${index + 1}`}
+            className="h-full w-full object-cover"
+          />
+        </button>
+      ))}
+    </div>
+  )}
+</div>
 
             <h1 className="text-4xl font-bold text-neutral-900 mb-2">{room.title}</h1>
             <p className="text-neutral-500 mb-6">Phase {room.phase} • {room.type}</p>
@@ -528,209 +606,41 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                     </a>
                   </div>
                 </div>
-              ) : isonline ? (
-                /* --- ONLINE BOOKING PLATFORMS (DYNAMIC) --- */
-                <div className="py-4 space-y-6">
-                  {/* Header */}
-                  <div className="bg-green-50 border border-green-100 rounded-2xl p-6 text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Globe className="w-6 h-6 text-green-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-neutral-900 mb-2">Book Online</h3>
-                    <p className="text-sm text-neutral-600 leading-relaxed">
-                      Check availability and book this room through our trusted partner platforms.
-                    </p>
-                  </div>
-
-                  {/* Platform Links - Dynamic from booking_platform column */}
-                  <div className="space-y-3">
-                    <h4 className="text-[11px] font-bold uppercase text-neutral-400 tracking-widest border-b border-neutral-50 pb-2">
-                      Available On
-                    </h4>
-
-                    {(() => {
-                      // STEP 1: Get the raw string from database
-                      const rawData = room.booking_platform;
-
-                      // DEBUG: Check browser console (F12) to see this
-                      console.log("Raw booking_platform:", rawData);
-
-                      // STEP 2: Parse the string into an array of URLs
-                      let platforms: string[] = [];
-
-                      if (rawData && typeof rawData === "string") {
-                        const cleaned = rawData.trim();
-
-                        // Case A: JSON array string -> "[\"url1\",\"url2\"]"
-                        if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
-                          try {
-                            platforms = JSON.parse(cleaned);
-                          } catch (e) {
-                            console.error("JSON parse failed:", e);
-                          }
-                        }
-                        // Case B: Plain comma-separated string -> "url1,url2,url3"
-                        else if (cleaned.includes(",")) {
-                          platforms = cleaned
-                            .split(",")
-                            .map(url => url.trim().replace(/^["']|["']$/g, ""))
-                            .filter(url => url.length > 0);
-                        }
-                        // Case C: Single URL string
-                        else {
-                          platforms = [cleaned.replace(/^["']|["']$/g, "")];
-                        }
-                      }
-
-                      console.log("Parsed platforms:", platforms);
-
-                      // STEP 3: Match URL to platform info
-                      const getPlatformInfo = (url: string) => {
-                        const lowerUrl = url.toLowerCase();
-                        if (lowerUrl.includes("airbnb")) {
-                          return { name: "Airbnb", color: "#FF5A5F", logo: "https://www.vectorlogo.zone/logos/airbnb/airbnb-tile.svg", desc: "Check availability & rates" };
-                        }
-                        if (lowerUrl.includes("booking.com")) {
-                          return { name: "Booking.com", color: "#003580", logo: "https://www.vectorlogo.zone/logos/booking/booking-icon.svg", desc: "Reserve with free cancellation" };
-                        }
-                        if (lowerUrl.includes("trip.com")) {
-                          return { name: "Trip.com", color: "#287DFA", logo: "https://cdn.brandfetch.io/id84Kz4mXP/w/400/h/400/theme/dark/icon.jpeg?c=1dxbfHSJFAPEGdCLU4o5B", desc: "Read reviews & book direct" };
-                        }
-                        if (lowerUrl.includes("agoda")) {
-                          return { name: "Agoda", color: "#7B1FA2", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Agoda_Logo_2022.svg/250px-Agoda_Logo_2022.svg.png", desc: "Best price guarantee" };
-                        }
-                        return { name: "Book Now", color: "#19682e", logo: "https://cdn-icons-png.flaticon.com/512/747/747310.png", desc: "Book your stay" };
-                      };
-
-                      // STEP 4: Show error if no platforms found
-                      if (platforms.length === 0) {
-                        return (
-                          <div className="text-center py-8 text-neutral-400 bg-neutral-50 rounded-xl">
-                            <p className="text-sm font-medium">No booking platforms available</p>
-                            <p className="text-xs mt-1 text-neutral-300">Data: {rawData || "empty"}</p>
-                          </div>
-                        );
-                      }
-
-                      // STEP 5: Render each platform link
-                      return platforms.map((url, idx) => {
-                        const info = getPlatformInfo(url);
-                        
-                        return (
-                          <a
-                            key={idx}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-4 p-4 rounded-xl border border-neutral-100 transition-all group"
-                            onMouseEnter={(e) => {
-                              const target = e.currentTarget;
-                              target.style.backgroundColor = `${info.color}0D`; // 5% opacity
-                              target.style.borderColor = `${info.color}33`;      // 20% opacity
-                            }}
-                            onMouseLeave={(e) => {
-                              const target = e.currentTarget;
-                              target.style.backgroundColor = '';
-                              target.style.borderColor = '';
-                            }}
-                          >
-                            {/* Icon container */}
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                              style={{ backgroundColor: `${info.color}15` }} // 10% opacity base
-                              onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLDivElement).style.backgroundColor = `${info.color}33`; // 20% opacity on hover
-                              }}
-                              onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLDivElement).style.backgroundColor = `${info.color}15`; // back to 10%
-                              }}
-                            >
-                              <img
-                                src={info.logo}
-                                alt={info.name}
-                                className="w-5 h-5 object-contain"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "https://cdn-icons-png.flaticon.com/512/747/747310.png";
-                                }}
-                              />
-                            </div>
-
-                            {/* Text content */}
-                            <div className="flex-1">
-                              <p
-                                className="text-sm font-bold text-neutral-900 transition-colors"
-                                onMouseEnter={(e) => {
-                                  (e.currentTarget as HTMLParagraphElement).style.color = info.color;
-                                }}
-                                onMouseLeave={(e) => {
-                                  (e.currentTarget as HTMLParagraphElement).style.color = '';
-                                }}
-                              >
-                                {info.name}
-                              </p>
-                              <p className="text-xs text-neutral-500">{info.desc}</p>
-                            </div>
-
-                            {/* External link icon */}
-                            <ExternalLink
-                              className="w-4 h-4 text-neutral-400 transition-colors"
-                              onMouseEnter={(e) => {
-                                (e.currentTarget as SVGElement).style.color = info.color;
-                              }}
-                              onMouseLeave={(e) => {
-                                (e.currentTarget as SVGElement).style.color = '';
-                              }}
-                            />
-                          </a>
-                        );
-                      });
-                    })()}
-                    <a
-                      href="https://www.swiftbook.io/inst/#home?propertyId=381MfGmNUi0wtjtI1IwyizdjYzMzM=&JDRN=Y"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-4 p-4 rounded-xl border border-neutral-100 hover:bg-[#1e3a8a]/5 hover:border-[#1e3a8a]/20 transition-all group"
-                    >
-                      <div className="w-10 h-10 bg-[#1e3a8a]/10 rounded-xl flex items-center justify-center group-hover:bg-[#1e3a8a]/20 transition-colors">
-                        <img
-                          src="https://lagranderesidence.com/assets/logo.webp"
-                          alt="Airbnb"
-                          className="w-5 h-5 object-contain"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-neutral-900 group-hover:text-[#1e3a8a] transition-colors">SwiftBook</p>
-                        <p className="text-xs text-neutral-500">Check availability & rates</p>
-                      </div>
-                      <ExternalLink className="w-4 h-4 text-neutral-400 group-hover:text-[#1e3a8a] transition-colors" />
-                    </a>
-                  </div>
-
-                  {/* Footer Note */}
-                  <div className="bg-neutral-50 rounded-xl p-4 text-center">
-                    <p className="text-xs text-neutral-500">
-                      Prices may vary across platforms. Compare rates to find the best deal for your stay.
-                    </p>
-                  </div>
-                </div>
-              ) : (
+              )  : (
                 /* --- BOOKING FORM --- */
                 <>
                   {/* Pricing Mode Toggle */}
-                  <div className="flex p-1 bg-neutral-100 rounded-xl mb-8">
-                    <button
-                      onClick={() => setBookingMode("daily")}
-                      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${bookingMode === 'daily' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
-                    >
-                      Daily <span className="block text-xs font-normal opacity-70">₱{formatPrice(room.daily_price)}</span>
-                    </button>
-                    <button
-                      onClick={() => setBookingMode("monthly")}
-                      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${bookingMode === 'monthly' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
-                    >
-                      Monthly <span className="block text-xs font-normal opacity-70">₱{formatPrice(room.monthly_price)}</span>
-                    </button>
-                  </div>
+<div className="flex p-1 bg-neutral-100 rounded-xl mb-8">
+  <button
+    onClick={() => setBookingMode("daily")}
+    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${
+      bookingMode === "daily"
+        ? "bg-white shadow-sm text-neutral-900"
+        : "text-neutral-500 hover:text-neutral-700"
+    }`}
+  >
+    Daily
+    <span className="block text-xs font-normal opacity-70">
+      ₱{formatPrice(room.daily_price)}
+    </span>
+  </button>
+
+  {room.monthly_price != null && Number(room.monthly_price) > 0 && (
+    <button
+      onClick={() => setBookingMode("monthly")}
+      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${
+        bookingMode === "monthly"
+          ? "bg-white shadow-sm text-neutral-900"
+          : "text-neutral-500 hover:text-neutral-700"
+      }`}
+    >
+      Monthly
+      <span className="block text-xs font-normal opacity-70">
+        ₱{formatPrice(room.monthly_price)}
+      </span>
+    </button>
+  )}
+</div>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* SECTION: Stay Details */}
@@ -847,8 +757,9 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
                       <div className="flex justify-between items-baseline pt-2">
                         <span className="text-sm font-bold text-[#19682e]">Total Price</span>
-                        <span className="text-2xl font-black text-[#19682e]">₱{formatPrice(total)}</span>
-                      </div>
+<span className="text-2xl font-black text-[#19682e]">
+  ₱{formatPrice(total)}
+</span>                      </div>
                     </div>
 
                     <motion.button
@@ -857,7 +768,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                       type="submit"
                       className="w-full py-4 bg-[#19682e] text-white rounded-2xl font-bold shadow-xl shadow-neutral-200 hover:bg-[#19682e] transition-all"
                     >
-                      Reserve This Room
+                      Inquire Now
                     </motion.button>
                   </form>
                 </>
@@ -894,16 +805,15 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                 </div>
                 <button
                   onClick={() => setConfirmModalOpen(false)}
-                  className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
-                >
+className="p-2 hover:bg-[#19682e]/10 hover:text-[#19682e] rounded-full transition-all duration-300"                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="p-6 space-y-6">
                 {/* Room Summary Card */}
-                <div className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-2xl p-5 border border-neutral-200">
-                  <div className="flex items-start gap-4">
+<div className="bg-gradient-to-br from-[#19682e]/5 to-[#19682e]/10 rounded-2xl p-5 border border-[#19682e]/15">                 
+ <div className="flex items-start gap-4">
                     <div className="w-20 h-20 rounded-xl bg-neutral-200 overflow-hidden flex-shrink-0">
                       {images[0] && (
                         <img src={images[0]} alt={room.title} className="w-full h-full object-cover" />
@@ -922,21 +832,21 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
                 {/* Booking Details Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CalendarDays className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-bold uppercase text-blue-600">Check-in</span>
-                    </div>
+<div className="bg-[#19682e]/10 rounded-xl p-4 border border-[#19682e]/20">
+  <div className="flex items-center gap-2 mb-2">
+    <CalendarDays className="w-4 h-4 text-[#19682e]" />
+    <span className="text-xs font-bold uppercase text-[#19682e]">Check-in</span>
+  </div>
                     <p className="font-semibold text-neutral-900">
                       {dateRange ? format(dateRange[0], 'MMMM dd, yyyy') : '-'}
                     </p>
                   </div>
 
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CalendarDays className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-bold uppercase text-blue-600">Check-out</span>
-                    </div>
+<div className="bg-[#19682e]/10 rounded-xl p-4 border border-[#19682e]/20">
+  <div className="flex items-center gap-2 mb-2">
+    <CalendarDays className="w-4 h-4 text-[#19682e]" />
+    <span className="text-xs font-bold uppercase text-[#19682e]">Check-out</span>
+  </div>
                     <p className="font-semibold text-neutral-900">
                       {dateRange ? format(dateRange[1], 'MMMM dd, yyyy') : '-'}
                     </p>
@@ -966,11 +876,11 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
                 {/* Guest Information */}
                 <div className="border border-neutral-200 rounded-2xl overflow-hidden">
-                  <div className="bg-neutral-50 px-5 py-3 border-b border-neutral-200">
-                    <h4 className="text-xs font-bold uppercase text-neutral-500 tracking-wider flex items-center gap-2">
-                      <User className="w-4 h-4" /> Guest Information
-                    </h4>
-                  </div>
+<div className="bg-[#19682e]/5 px-5 py-3 border-b border-[#19682e]/10">
+  <h4 className="text-xs font-bold uppercase text-[#19682e] tracking-wider flex items-center gap-2">
+    <User className="w-4 h-4" /> Guest Information
+  </h4>
+</div>
                   <div className="p-5 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-neutral-500">Full Name</span>
@@ -989,11 +899,11 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
                 {/* Pricing Breakdown */}
                 <div className="border border-neutral-200 rounded-2xl overflow-hidden">
-                  <div className="bg-neutral-50 px-5 py-3 border-b border-neutral-200">
-                    <h4 className="text-xs font-bold uppercase text-neutral-500 tracking-wider flex items-center gap-2">
-                      <Banknote className="w-4 h-4" /> Pricing Details
-                    </h4>
-                  </div>
+<div className="bg-[#19682e]/5 px-5 py-3 border-b border-[#19682e]/10">
+  <h4 className="text-xs font-bold uppercase text-[#19682e] tracking-wider flex items-center gap-2">
+    <Banknote className="w-4 h-4" /> Pricing Details
+  </h4>
+</div>
                   <div className="p-5 space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-neutral-500">
@@ -1032,34 +942,17 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                   </div>
                 </div>
 
-                {/* Payment Notice */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                  <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <CreditCard className="w-4 h-4 text-amber-600" />
-                  </div>
-                  <div>
-                    <h5 className="font-semibold text-amber-900 text-sm mb-1">Payment Instructions</h5>
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                      After confirming, you'll receive an email with payment details.
-                      A deposit amount is required to secure your reservation .
-                      Our team will contact you within 24 hours.
-                    </p>
-                  </div>
-                </div>
-
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setConfirmModalOpen(false)}
-                    className="flex-1 py-4 px-6 border-2 border-neutral-200 text-neutral-700 rounded-2xl font-bold hover:bg-neutral-50 transition-all"
-                  >
+className="flex-1 py-4 px-6 border-2 border-[#19682e]/20 text-[#19682e] rounded-2xl font-bold hover:bg-[#19682e] hover:text-white hover:border-[#19682e] transition-all duration-300"                  >
                     Edit Details
                   </button>
                   <button
                     onClick={handleConfirmBooking}
                     disabled={isSubmitting}
-                    className="flex-[2] py-4 px-6 bg-[#19682e] text-white rounded-2xl font-bold hover:bg-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+className="flex-[2] py-4 px-6 bg-[#19682e] text-white rounded-2xl font-bold hover:bg-[#145625] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -1068,13 +961,12 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                     ) : (
                       <>
                         <Check className="w-5 h-5" />
-                        Confirm Booking Request
+                        Confirm Inquiry
                       </>
                     )}
                   </button>
                 </div>
               </div>
-              <Footer />
             </motion.div>
           </div>
         )}

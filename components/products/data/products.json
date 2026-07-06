@@ -7,7 +7,7 @@
     "price": 500.00,
     "category": " Membership Program",
     "validity": "No Expiration",
-    "file": "/assets/Products/passbook.glb",
+    "file": "/assets/products/passbook.glb",
     "scale": 0.5
   },
   {
@@ -18,7 +18,7 @@
     "price": 4000.00,
         "category": " Membership Program",
             "validity": "6 Months",
-    "file": "/assets/Products/passport.glb",
+    "file": "/assets/products/passport.glb",
     "scale": 0.5
   }
 ]

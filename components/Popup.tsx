@@ -14,8 +14,10 @@ interface Promo {
 
 const API_URL = "https://lagranderesidence.com/api/api.php?endpoint=promos";
 const CACHE_KEY = "lgr_promo_logic_cache";
+const DAILY_PROMOS_KEY = "lgr_daily_promos"; // stores the 2 random promos for today
 const LAST_SHOWN_KEY = "lgr_promo_last_shown";
 const SHOW_DELAY = 5000;
+const PROMOS_PER_DAY = 2;
 
 function isPromoEqual(cached: Promo, api: Promo): boolean {
   return (
@@ -56,6 +58,60 @@ function markShownToday(): void {
   localStorage.setItem(LAST_SHOWN_KEY, new Date().toISOString());
 }
 
+function getDailyDateString(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+}
+
+/** Shuffle array in-place using Fisher-Yates */
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getDailyPromos(allValid: Promo[]): Promo[] {
+  if (typeof window === "undefined") return allValid.slice(0, PROMOS_PER_DAY);
+
+  const stored = localStorage.getItem(DAILY_PROMOS_KEY);
+  const todayStr = getDailyDateString();
+
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.date === todayStr && Array.isArray(parsed.promos)) {
+        // Verify stored promos still exist in current valid set (in case one expired mid-day)
+        const validIds = new Set(allValid.map((p) => p.id));
+        const stillValid = parsed.promos.filter((p: Promo) => validIds.has(p.id));
+        if (stillValid.length > 0) {
+          return stillValid;
+        }
+      }
+    } catch {
+      // fall through to regenerate
+    }
+  }
+
+  // Generate new random selection for today
+  const shuffled = shuffleArray(allValid);
+  const selected = shuffled.slice(0, PROMOS_PER_DAY);
+
+  localStorage.setItem(
+    DAILY_PROMOS_KEY,
+    JSON.stringify({ date: todayStr, promos: selected })
+  );
+
+  return selected;
+}
+
+function clearDailyPromos(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(DAILY_PROMOS_KEY);
+}
+
 export default function PromoPopup() {
   const [activePromos, setActivePromos] = useState<Promo[]>([]);
   const [popupIndex, setPopupIndex] = useState(0);
@@ -66,7 +122,7 @@ export default function PromoPopup() {
   const popupRef = useRef<HTMLDivElement | null>(null);
   const isAnimating = useRef(false);
 
-  // Mount gate to prevent hydration mismatch with useLayoutEffect-like behavior
+  // Mount gate to prevent hydration mismatch
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -108,6 +164,7 @@ export default function PromoPopup() {
 
         if (validPromos.length === 0) {
           localStorage.removeItem(CACHE_KEY);
+          clearDailyPromos();
           return;
         }
 
@@ -115,12 +172,19 @@ export default function PromoPopup() {
           cachedValidPromos.length === 0 ||
           !isPromoArrayEqual(cachedValidPromos, validPromos);
 
-        const promosToShow = hasChanged ? validPromos : cachedValidPromos;
+        const promosToCache = hasChanged ? validPromos : cachedValidPromos;
         if (hasChanged) {
           localStorage.setItem(CACHE_KEY, JSON.stringify(validPromos));
+          // Clear daily selection when promos change so we re-randomize
+          clearDailyPromos();
         }
 
-        setActivePromos(promosToShow);
+        // Pick 2 random promos for today
+        const dailyPromos = getDailyPromos(promosToCache);
+
+        if (dailyPromos.length === 0) return;
+
+        setActivePromos(dailyPromos);
         setPopupIndex(0);
 
         setTimeout(() => {
@@ -130,7 +194,11 @@ export default function PromoPopup() {
       } catch (error) {
         console.error("Promo fetch error:", error);
         if (cachedValidPromos.length > 0) {
-          setActivePromos(cachedValidPromos);
+          const dailyPromos = getDailyPromos(cachedValidPromos);
+          if (dailyPromos.length === 0) return;
+
+          setActivePromos(dailyPromos);
+          setPopupIndex(0);
           setTimeout(() => {
             setIsVisible(true);
             markShownToday();
