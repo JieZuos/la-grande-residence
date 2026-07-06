@@ -260,93 +260,149 @@ export default function App() {
       />
 
       {/* ── HERO ──────────────────────────────────────────────────────────────── */}
-      <section
-        className="relative min-h-[100dvh] flex flex-col lg:flex-row items-center justify-center gap-8 sm:gap-12 px-6 sm:px-10 md:px-16 lg:px-20 pt-16 sm:pt-20 pb-16 sm:pb-24 overflow-hidden"
-        style={{ zIndex: 1 }}
+{/* ── HERO ──────────────────────────────────────────────────────────────── */}
+<section
+  className="relative min-h-[100dvh] flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 px-6 sm:px-10 md:px-16 lg:px-20 pt-24 sm:pt-28 pb-16 sm:pb-24 overflow-hidden"
+  style={{ zIndex: 1 }}
+>
+  {/* Text side */}
+  <motion.div
+    style={{ opacity: heroOpacity, y: heroY }}
+    className="flex-[1.2] max-w-3xl flex flex-col justify-center text-center lg:text-left w-full"
+  >
+    <motion.span
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7 }}
+      className="inline-flex w-fit mx-auto lg:mx-0 items-center rounded-full px-4 py-2 mb-6 text-xs font-semibold tracking-[0.18em] uppercase"
+      style={{
+        background: BRAND_SOFT,
+        color: BRAND,
+        border: "1px solid rgba(25,104,46,0.18)",
+      }}
+    >
+      ✦ Limited Edition Member Passport
+    </motion.span>
+
+    <motion.h1
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.95, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="font-bold leading-[1.05] mb-5"
+      style={{
+        fontFamily: "Arial, Helvetica, sans-serif",
+        fontSize: "clamp(2.5rem, 6vw, 5.4rem)",
+      }}
+    >
+      Passport Perks.
+      <br />
+      <span style={{ color: BRAND }}>Are Here.</span>
+    </motion.h1>
+
+    <motion.p
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.85, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="text-sm sm:text-base md:text-lg leading-relaxed mb-8 mx-auto lg:mx-0 max-w-xl"
+      style={{ color: SUBTEXT }}
+    >
+      Enjoy complimentary experiences, exclusive discounts, and premium
+      member-only perks throughout La Grande Residence.{" "}
+      <span style={{ color: BRAND, fontWeight: 700 }}>
+        Valid for 6 months.
+      </span>
+    </motion.p>
+
+    {/* Price + CTA */}
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: 0.7 }}
+      className="flex flex-col sm:flex-row items-center lg:items-stretch justify-center lg:justify-start gap-4 mb-10"
+    >
+      <div
+        className="rounded-3xl px-6 py-5 w-full max-w-sm text-center sm:text-left"
+        style={{
+          background: "#fff",
+          border: "1px solid rgba(25,104,46,0.14)",
+          boxShadow: "0 18px 50px rgba(0,0,0,0.07)",
+        }}
       >
-        {/* Text side */}
-        <motion.div
-          style={{ opacity: heroOpacity, y: heroY }}
-          className="flex-[1.7] max-w-2xl flex flex-col justify-center text-center lg:text-left w-full"
+        <span
+          className="block text-xs uppercase tracking-[0.22em] mb-2"
+          style={{ color: SUBTEXT }}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-5"
-          >
-          </motion.div>
+          Introductory Price
+        </span>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.95, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
-            className="font-bold leading-[1.08] mb-4 sm:mb-6"
-            style={{
-              fontFamily: "Arial, Helvetica, sans-serif",
-              fontSize: "clamp(2rem, 5.5vw, 4.5rem)",
-            }}
-          >
-            Passport Perks{" "}
-            <em className="not-italic" style={{ color: BRAND }}>
-              Are Here.
-            </em>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.85, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="text-sm sm:text-base md:text-lg leading-relaxed mb-8 sm:mb-10 mx-auto lg:mx-0 max-w-2xl"
-            style={{ color: SUBTEXT }}
-          >
-            Your all-access pass to exclusive stays, treats, and discounts —
-            valid for{" "}
-            <span style={{ color: BRAND }}>6 months</span> 💫
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.3, duration: 1 }}
-            className="flex items-center justify-center lg:justify-start gap-3"
-            style={{ color: "#8a8a8a" }}
-          >
-            <motion.span
-              animate={{ y: [0, 7, 0] }}
-              transition={{ repeat: Infinity, duration: 1.9, ease: "easeInOut" }}
-              style={{ color: BRAND }}
-            >
-              ↓
-            </motion.span>
-            <span
-              className="text-xs tracking-[0.22em] uppercase"
-              style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#8a8a8a" }}
-            >
-              Scroll to explore
-            </span>
-          </motion.div>
-        </motion.div>
-
-        {/* Passport side */}
-        <motion.div
-          style={{ y: passportY, scale: passportScale }}
-          className="flex-[0.7] flex items-center justify-center w-full max-w-sm lg:max-w-md"
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <PassportModel />
-        </motion.div>
-
-        {/* Bottom vignette */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 pointer-events-none"
+        <strong
+          className="block leading-none"
           style={{
-            background: "linear-gradient(to top, #ffffff, transparent)",
+            fontSize: "clamp(2.8rem, 5vw, 4rem)",
+            color: BRAND,
           }}
-        />
-      </section>
+        >
+          ₱4,000
+        </strong>
+
+        <p className="text-xs sm:text-sm mt-3 leading-relaxed" style={{ color: SUBTEXT }}>
+          Includes complimentary perks and exclusive vouchers.
+        </p>
+      </div>
+
+      <button
+        className="rounded-full px-8 py-4 font-semibold transition-transform hover:scale-105 h-fit sm:self-center"
+        style={{
+          background: BRAND,
+          color: "#fff",
+        }}
+      >
+        Get Your Passport
+      </button>
+    </motion.div>
+
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.3, duration: 1 }}
+      className="flex items-center justify-center lg:justify-start gap-3"
+    >
+      <motion.span
+        animate={{ y: [0, 7, 0] }}
+        transition={{ repeat: Infinity, duration: 1.9, ease: "easeInOut" }}
+        style={{ color: BRAND }}
+      >
+        ↓
+      </motion.span>
+
+      <span
+        className="text-xs tracking-[0.22em] uppercase"
+        style={{ color: "#8a8a8a" }}
+      >
+        Scroll to explore
+      </span>
+    </motion.div>
+  </motion.div>
+
+  {/* Passport side */}
+  <motion.div
+    style={{ y: passportY, scale: passportScale }}
+    className="flex-[0.8] flex items-center justify-center w-full max-w-sm lg:max-w-lg"
+    initial={{ opacity: 0, y: 60 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1.1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+  >
+    <PassportModel />
+  </motion.div>
+
+  {/* Bottom vignette */}
+  <div
+    className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 pointer-events-none"
+    style={{
+      background: "linear-gradient(to top, #ffffff, transparent)",
+    }}
+  />
+</section>
 
       {/* ── INTRO BAND ────────────────────────────────────────────────────────── */}
       <section className="relative py-16 sm:py-24 px-6 sm:px-10 md:px-16 lg:px-20" style={{ zIndex: 1 }}>
