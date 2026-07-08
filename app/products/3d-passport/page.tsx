@@ -154,7 +154,7 @@ function PassportModel() {
 
           <Suspense fallback={null}>
             <OrbitControls
-              target={[0, 0.7, 0]}
+              target={[0, 0.5, 0]}
               enableZoom={false}
               enablePan={false}
               autoRotate
