@@ -79,7 +79,6 @@ const Canvas = lazy(() => import("@react-three/fiber").then(m => ({ default: m.C
 const Float = lazy(() => import("@react-three/drei").then(m => ({ default: m.Float })));
 const Environment = lazy(() => import("@react-three/drei").then(m => ({ default: m.Environment })));
 const OrbitControls = lazy(() => import("@react-three/drei").then(m => ({ default: m.OrbitControls })));
-const useGLTF = lazy(() => import("@react-three/drei").then(m => ({ default: m.useGLTF })));
 
 function PassportObject({ scale }: { scale: number }) {
   // Use dynamic import to avoid SSR issues
@@ -215,30 +214,42 @@ function InquiryModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     setIsSubmitting(true);
     setError("");
 
-    try {
-      const response = await fetch("https://lagranderesidence.com/api/api.php?endpoint=passport-inquiry", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+try {
+  const response = await fetch("https://lagranderesidence.com/api/api.php?endpoint=passport-inquiry", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    body: JSON.stringify(formData),
+  });
 
-      if (response.ok) {
-        setIsSuccess(true);
-        setFormData({ name: "", phone: "", email: "", note: "" });
-        setTimeout(() => {
-          setIsSuccess(false);
-          onClose();
-        }, 3000);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
-    } catch (err) {
-      setError("Network error. Please check your connection and try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const text = await response.text();
+  console.log("Raw API response:", text);
+
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch {
+    throw new Error("Invalid JSON response from server");
+  }
+
+  if (response.ok && result.success) {
+    setIsSuccess(true);
+    setFormData({ name: "", phone: "", email: "", note: "" });
+
+    setTimeout(() => {
+      setIsSuccess(false);
+      onClose();
+    }, 3000);
+  } else {
+    setError(result.message || "Something went wrong. Please try again.");
+    console.error(result);
+  }
+} catch (err) {
+  console.error("Fetch error:", err);
+  setError("Network error. Please check your connection and try again.");
+}
   };
 
   // Lock body scroll when modal is open
