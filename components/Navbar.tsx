@@ -117,7 +117,7 @@ const Navbar = ({ heroRef }: NavbarProps) => {
     { label: "Journal", href: "/journal" },
     { label: "Blog", href: "/blogs" },
     { label: "Gallery", href: "/gallery" },
-    { label: "Products", href: "/products" },
+    { label: "Passport", href: "/products/passport" },
     { label: "360 Tour", href: "/360" },
   ];
 
