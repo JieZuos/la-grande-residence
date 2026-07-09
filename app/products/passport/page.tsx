@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback, Suspense, lazy } from "react";
+import { useRef, useEffect, useState, useCallback, Suspense, lazy, useMemo } from "react";
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -76,95 +76,101 @@ function useMediaQuery(query: string) {
 
 // ─── 3D Passport Card ─────────────────────────────────────────────────────────
 
-// Lazy load the heavy 3D components
-const Canvas = lazy(() => import("@react-three/fiber").then(m => ({ default: m.Canvas })));
-const Float = lazy(() => import("@react-three/drei").then(m => ({ default: m.Float })));
-const Environment = lazy(() => import("@react-three/drei").then(m => ({ default: m.Environment })));
-const OrbitControls = lazy(() => import("@react-three/drei").then(m => ({ default: m.OrbitControls })));
+const PASSPORT_MODEL = "/assets/products/passport.glb";
 
-function PassportObject({ scale }: { scale: number }) {
-  // Use dynamic import to avoid SSR issues
-  const [useGLTFModule, setUseGLTFModule] = useState<any>(null);
-
-  useEffect(() => {
-    import("@react-three/drei").then(m => setUseGLTFModule(() => m.useGLTF));
-  }, []);
-
-  if (!useGLTFModule) return null;
-
-  const GLTFComponent = () => {
-    const { scene } = useGLTFModule("/assets/products/passport.glb");
-    return <primitive object={scene} scale={scale} rotation={[0, 0, 0.1]} />;
-  };
-
+function ModelFallback() {
   return (
-    <Suspense fallback={null}>
-      <Float
-        speed={1}
-        rotationIntensity={0.5}
-        floatIntensity={0.1}
-        floatingRange={[-0.1, 0.1]}
-      >
-        <GLTFComponent />
-      </Float>
-    </Suspense>
+    <div className="w-full max-w-[500px] mx-auto h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px] flex items-center justify-center">
+      <div className="relative flex flex-col items-center gap-3">
+        <div className="w-12 h-12 border-2 border-[#19682e] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-medium" style={{ color: SUBTEXT }}>
+          Loading passport preview...
+        </span>
+      </div>
+    </div>
   );
 }
 
-function PassportModel() {
-  const [mounted, setMounted] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 640px)");
-  const isTablet = useMediaQuery("(max-width: 1024px)");
+// Load all Three.js dependencies in one chunk instead of several lazy waterfalls.
+const PassportScene = lazy(async () => {
+  const [{ Canvas }, drei] = await Promise.all([
+    import("@react-three/fiber"),
+    import("@react-three/drei"),
+  ]);
 
-  // Responsive scale: desktop=7, tablet=5, mobile=3.5
-  const modelScale = isMobile ? 7 : isTablet ? 7 : 7;
+  const { Float, OrbitControls, useGLTF } = drei;
 
-  useEffect(() => {
-    setMounted(true);
-    // Preload the GLB file after component mounts
-    import("@react-three/drei").then(m => {
-      m.useGLTF.preload("/assets/products/passport.glb");
-    });
-  }, []);
+  function PassportObject({ scale }: { scale: number }) {
+    const { scene } = useGLTF(PASSPORT_MODEL);
 
-  if (!mounted) {
+    const clonedScene = useMemo(() => scene.clone(), [scene]);
+
     return (
-      <div className="w-full max-w-[500px] mx-auto h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-[#19682e] border-t-transparent rounded-full animate-spin" />
+      <Float
+        speed={0.9}
+        rotationIntensity={0.35}
+        floatIntensity={0.08}
+        floatingRange={[-0.08, 0.08]}
+      >
+        <primitive object={clonedScene} scale={scale} rotation={[0, 0, 0.1]} />
+      </Float>
+    );
+  }
+
+  useGLTF.preload(PASSPORT_MODEL);
+
+  function Scene({ scale }: { scale: number }) {
+    return (
+      <div className="w-full max-w-[500px] mx-auto h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px]">
+        <Canvas
+          camera={{ position: [0, 0.25, 3.8], fov: 24 }}
+          dpr={[1, 1.5]}
+          gl={{
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance",
+          }}
+          onCreated={({ gl }) => {
+            gl.setClearAlpha(0);
+          }}
+        >
+          <ambientLight intensity={2.2} />
+          <directionalLight position={[3, 5, 4]} intensity={2.2} />
+          <directionalLight position={[-3, -2, 2]} intensity={0.8} />
+
+          <Suspense fallback={null}>
+            <PassportObject scale={scale} />
+          </Suspense>
+
+          <OrbitControls
+            target={[0, 0.35, 0]}
+            enableZoom={false}
+            enablePan={false}
+            enableDamping
+            dampingFactor={0.08}
+            autoRotate
+            autoRotateSpeed={0.8}
+            makeDefault
+          />
+        </Canvas>
       </div>
     );
   }
 
+  return { default: Scene };
+});
+
+function PassportModel() {
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  const isTablet = useMediaQuery("(max-width: 1024px)");
+
+  // Keep desktop large, but reduce only on smaller screens for faster rendering.
+  const modelScale = isMobile ? 4.6 : isTablet ? 5.8 : 7;
+
   return (
-    <div className="w-full max-w-[500px] mx-auto h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px]">
-      <Suspense fallback={
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="w-12 h-12 border-2 border-[#19682e] border-t-transparent rounded-full animate-spin" />
-        </div>
-      }>
-        <Canvas camera={{ position: [0, 0, 3.5], fov: 22 }}>
-          <ambientLight intensity={1.8} />
-          <directionalLight position={[4, 5, 5]} intensity={2} />
-          <directionalLight position={[-4, -2, -2]} intensity={0.8} />
-
-          <Suspense fallback={null}>
-            <Environment preset="city" />
-          </Suspense>
-
-          <PassportObject scale={modelScale} />
-
-          <Suspense fallback={null}>
-            <OrbitControls
-              target={[0, 0.5, 0]}
-              enableZoom={false}
-              enablePan={false}
-              autoRotate
-              autoRotateSpeed={1.5}
-            />
-          </Suspense>
-        </Canvas>
-      </Suspense>
-    </div>
+    <Suspense fallback={<ModelFallback />}>
+      <PassportScene scale={modelScale} />
+    </Suspense>
   );
 }
 
