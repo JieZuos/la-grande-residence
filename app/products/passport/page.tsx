@@ -149,7 +149,7 @@ const PassportScene = lazy(async () => {
             enableDamping
             dampingFactor={0.08}
             autoRotate
-            autoRotateSpeed={0.8}
+            autoRotateSpeed={5}
             makeDefault
           />
         </Canvas>
