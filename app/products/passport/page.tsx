@@ -165,7 +165,7 @@ function PassportModel() {
   const isTablet = useMediaQuery("(max-width: 1024px)");
 
   // Keep desktop large, but reduce only on smaller screens for faster rendering.
-  const modelScale = isMobile ? 4.6 : isTablet ? 5.8 : 7;
+  const modelScale = isMobile ? 7 : isTablet ? 7 : 7;
 
   return (
     <Suspense fallback={<ModelFallback />}>
