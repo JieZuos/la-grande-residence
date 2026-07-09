@@ -159,7 +159,7 @@ function PassportModel() {
               enableZoom={false}
               enablePan={false}
               autoRotate
-              autoRotateSpeed={0.5}
+              autoRotateSpeed={1.5}
             />
           </Suspense>
         </Canvas>
