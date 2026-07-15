@@ -636,7 +636,7 @@ export default function App() {
     fontSize: "clamp(2rem, 7vw, 5.4rem)",
   }}
 >
-  LGR Passport.
+  LGR PASSPORT.
   <br />
   <span
   className="pt-5"
