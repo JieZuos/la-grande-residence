@@ -626,21 +626,30 @@ export default function App() {
             ✦ Limited Edition Member Passport
           </motion.span>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.95, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="font-bold leading-[1.05] mb-3 sm:mb-5"
-            style={{
-              fontFamily: "Arial, Helvetica, sans-serif",
-              fontSize: "clamp(2rem, 7vw, 5.4rem)",
-            }}
-          >
-            LGR Passport.
-            <br />
-            <span style={{ color: BRAND }}>No Flights.
-<br />Just Grande Experiences.</span>
-          </motion.h1>
+<motion.h1
+  initial={{ opacity: 0, y: 40 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.95, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+  className="font-bold leading-[1.05] mb-3 sm:mb-5"
+  style={{
+    fontFamily: "Arial, Helvetica, sans-serif",
+    fontSize: "clamp(2rem, 7vw, 5.4rem)",
+  }}
+>
+  LGR Passport.
+  <br />
+  <span
+    style={{
+      color: BRAND,
+      fontSize: "0.88em", // slightly smaller
+      display: "inline-block",
+    }}
+  >
+    No Flights.
+    <br />
+    Just Grande Experiences.
+  </span>
+</motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 28 }}
