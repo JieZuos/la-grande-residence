@@ -26,22 +26,22 @@ const FREE_PERKS = [
   {
     icon: BedDouble,
     title: "Grand Studio Stay",
-    desc: "A complimentary night in our signature Grand Studio — yours to enjoy.",
+    desc: "Experience an overnight stay in our signature Grand Studio, thoughtfully included as part of your LGR Passport experience.",
   },
   {
     icon: Dumbbell,
     title: "Pool & Fitness Gym",
-    desc: "Unlimited pool and fitness gym access throughout your entire stay.",
+    desc: "Enjoy access to our pools and fitness gym during your qualifying stay.",
   },
   {
     icon: Heater,
-    title: "Sauna for Two",
-    desc: "A full hour of private sauna bliss, reserved for you and a guest.",
+    title: "Sauna",
+    desc: "Relax with a one-hour sauna experience designed for complete rejuvenation.",
   },
   {
     icon: Gamepad2,
     title: "Gaming Room",
-    desc: "One hour of exclusive gaming room access — play, unwind, repeat.",
+    desc: "Spend quality time in our Gaming Room and enjoy a fun, relaxing experience.",
   },
 ];
 
@@ -636,9 +636,9 @@ export default function App() {
               fontSize: "clamp(2rem, 7vw, 5.4rem)",
             }}
           >
-            Passport Perks.
+            LGR Passport.
             <br />
-            <span style={{ color: BRAND }}>Are Here.</span>
+            <span style={{ color: BRAND }}>One Passport. Endless Experiences.</span>
           </motion.h1>
 
           <motion.p
@@ -648,11 +648,7 @@ export default function App() {
             className="text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed mb-6 sm:mb-8 mx-auto lg:mx-0 max-w-lg lg:max-w-xl"
             style={{ color: SUBTEXT }}
           >
-            Enjoy complimentary experiences, exclusive discounts, and premium
-            member-only perks throughout La Grande Residence.{" "}
-            <span style={{ color: BRAND, fontWeight: 700 }}>
-              Valid for 6 months.
-            </span>
+            Discover a curated collection of signature experiences, exclusive privileges, and special savings designed to make every visit to La Grande Residence even more rewarding.{" "}
           </motion.p>
 
           {/* Price + CTA */}
@@ -662,36 +658,6 @@ export default function App() {
             transition={{ duration: 0.8, delay: 0.7 }}
             className="flex flex-col sm:flex-row items-center lg:items-stretch justify-center lg:justify-start gap-3 sm:gap-4 mb-8 sm:mb-10"
           >
-            <div
-              className="rounded-2xl sm:rounded-3xl px-5 sm:px-6 py-4 sm:py-5 w-full max-w-sm text-center sm:text-left"
-              style={{
-                background: "#fff",
-                border: "1px solid rgba(25,104,46,0.14)",
-                boxShadow: "0 18px 50px rgba(0,0,0,0.07)",
-              }}
-            >
-              <span
-                className="block text-[10px] sm:text-xs uppercase tracking-[0.18em] sm:tracking-[0.22em] mb-1.5 sm:mb-2"
-                style={{ color: SUBTEXT }}
-              >
-                Introductory Price
-              </span>
-
-              <strong
-                className="block leading-none"
-                style={{
-                  fontSize: "clamp(2.2rem, 6vw, 4rem)",
-                  color: BRAND,
-                }}
-              >
-                ₱4,000
-              </strong>
-
-              <p className="text-[11px] sm:text-xs lg:text-sm mt-2 sm:mt-3 leading-relaxed" style={{ color: SUBTEXT }}>
-                Includes complimentary perks and exclusive vouchers.
-              </p>
-            </div>
-
             <button
               onClick={openModal}
               className="rounded-full px-6 sm:px-8 py-3.5 sm:py-4 font-semibold text-sm transition-transform hover:scale-105 h-fit sm:self-center w-full sm:w-auto"
@@ -700,7 +666,7 @@ export default function App() {
                 color: "#fff",
               }}
             >
-              Get Your Passport
+              Get Yours Now!
             </button>
           </motion.div>
 
@@ -764,7 +730,7 @@ export default function App() {
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 max-w-4xl mx-auto text-center"
         >
-          <SectionLabel>Included perks</SectionLabel>
+          <SectionLabel>Signature Experiences</SectionLabel>
           <h2
             className="font-bold leading-tight mb-3 sm:mb-4 lg:mb-6"
             style={{
@@ -772,15 +738,14 @@ export default function App() {
               fontSize: "clamp(1.5rem, 5vw, 3rem)",
             }}
           >
-            Everything you get,{" "}
-            <span style={{ color: BRAND }}>completely free.</span>
+            Everything waiting inside your,{" "}
+            <span style={{ color: BRAND }}>Passport.</span>
           </h2>
           <p
             className="text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed mx-auto px-4 sm:px-0"
             style={{ color: SUBTEXT, maxWidth: "480px" }}
           >
-            Four handpicked experiences — no catches, no minimums. Simply
-            show your passport and enjoy.
+            Your passport includes carefully selected experiences that introduce you to the best of La Grande Residence.
           </p>
         </motion.div>
       </section>
@@ -826,16 +791,15 @@ export default function App() {
                 fontSize: "clamp(1.5rem, 4.5vw, 2.75rem)",
               }}
             >
-              More savings,
+              More ways to experience
               <br />
-              <span style={{ color: BRAND }}>more moments.</span>
+              <span style={{ color: BRAND }}>LGR.</span>
             </h2>
             <p
               className="text-xs sm:text-sm md:text-base leading-relaxed mx-auto lg:mx-0 px-4 sm:px-0"
               style={{ color: SUBTEXT, maxWidth: "320px" }}
             >
-              Redeemable across every corner of La Grande Residence — from the
-              spa to the sky lounge.
+              Your passport includes exclusive privileges across our accommodations, dining, wellness, recreation, and transportation services.
             </p>
           </motion.div>
 
@@ -875,18 +839,16 @@ export default function App() {
               fontSize: "clamp(1.5rem, 5vw, 3rem)",
             }}
           >
-            Unlock exclusive privileges
+            Your Next Experience Starts
             <br />
-            <span style={{ color: BRAND }}>with your LGR Passport.</span>
+            <span style={{ color: BRAND }}>Here.</span>
           </h2>
 
           <p
             className="text-xs sm:text-sm md:text-base lg:text-lg mb-8 sm:mb-10 leading-relaxed mx-auto px-4 sm:px-0"
             style={{ color: SUBTEXT, maxWidth: "520px" }}
           >
-            Enjoy complimentary stays, premium amenities, exclusive discounts, and
-            member-only perks every time you visit La Grande Residence. Your next
-            unforgettable experience starts here.
+            From accommodations and wellness to dining and recreation, your LGR Passport brings together the experiences that define every visit to La Grande Residence.
           </p>
 
           <div className="flex flex-col items-center gap-3 sm:gap-4">
@@ -904,7 +866,7 @@ export default function App() {
                   fontFamily: "Arial, Helvetica, sans-serif",
                 }}
               >
-                Get Yours Now for ₱4,000
+                Get Your LGR Passport
               </span>
             </button>
 
