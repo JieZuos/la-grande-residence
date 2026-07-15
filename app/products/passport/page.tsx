@@ -639,9 +639,10 @@ export default function App() {
   LGR Passport.
   <br />
   <span
+  className="pt-5"
     style={{
       color: BRAND,
-      fontSize: "0.88em", // slightly smaller
+      fontSize: "0.68em", // slightly smaller
       display: "inline-block",
     }}
   >
