@@ -638,7 +638,8 @@ export default function App() {
           >
             LGR Passport.
             <br />
-            <span style={{ color: BRAND }}>One Passport. Endless Experiences.</span>
+            <span style={{ color: BRAND }}>No Flights.
+<br />Just Grande Experiences.</span>
           </motion.h1>
 
           <motion.p
@@ -648,7 +649,7 @@ export default function App() {
             className="text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed mb-6 sm:mb-8 mx-auto lg:mx-0 max-w-lg lg:max-w-xl"
             style={{ color: SUBTEXT }}
           >
-            Discover a curated collection of signature experiences, exclusive privileges, and special savings designed to make every visit to La Grande Residence even more rewarding.{" "}
+            Why travel far when extraordinary experiences are closer than you think? Enjoy six months of exclusive privileges, unforgettable stays, and exceptional savings.{" "}
           </motion.p>
 
           {/* Price + CTA */}
@@ -738,14 +739,14 @@ export default function App() {
               fontSize: "clamp(1.5rem, 5vw, 3rem)",
             }}
           >
-            Everything waiting inside your,{" "}
-            <span style={{ color: BRAND }}>Passport.</span>
+            Your Passport to{" "}
+            <span style={{ color: BRAND }}>Grande Experiences.</span>
           </h2>
           <p
             className="text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed mx-auto px-4 sm:px-0"
             style={{ color: SUBTEXT, maxWidth: "480px" }}
           >
-            Your passport includes carefully selected experiences that introduce you to the best of La Grande Residence.
+            Every page unlocks exclusive privileges, curated experiences, and exceptional savings—crafted to make every stay at La Grande Residence unforgettable.
           </p>
         </motion.div>
       </section>
@@ -791,15 +792,15 @@ export default function App() {
                 fontSize: "clamp(1.5rem, 4.5vw, 2.75rem)",
               }}
             >
-              More ways to experience
+              More Grande Experiences Await.
               <br />
-              <span style={{ color: BRAND }}>LGR.</span>
+              {/* <span style={{ color: BRAND }}>LGR.</span> */}
             </h2>
             <p
               className="text-xs sm:text-sm md:text-base leading-relaxed mx-auto lg:mx-0 px-4 sm:px-0"
               style={{ color: SUBTEXT, maxWidth: "320px" }}
             >
-              Your passport includes exclusive privileges across our accommodations, dining, wellness, recreation, and transportation services.
+              Your journey doesn't end here. Discover exclusive vouchers for accommodations, dining, wellness, recreation, and transportation—crafted to make every stay even more rewarding.
             </p>
           </motion.div>
 
