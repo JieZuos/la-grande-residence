@@ -51,6 +51,13 @@ import toast, { Toaster } from "react-hot-toast";
 import { BackButton } from "@/components/providers/backbutton";
 import { useRouter } from "next/navigation";
 import { Footer } from "@/components/Footer";
+import {
+  CountryCode,
+  getCountries,
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+  validatePhoneNumberLength,
+} from "libphonenumber-js";
 
 // Map the old FontAwesome icons to new Lucide icons
 const Icon = ({
@@ -106,6 +113,19 @@ type StoredInquiry = {
 const INQUIRY_STORAGE_KEY = "lgr_room_inquiries";
 const PROMO_URL = "https://lagranderesidence.com/api/api.php?endpoint=promos";
 
+const countryDisplayNames =
+  typeof Intl !== "undefined"
+    ? new Intl.DisplayNames(["en"], { type: "region" })
+    : null;
+
+const COUNTRY_OPTIONS = getCountries()
+  .map((country) => ({
+    code: country,
+    name: countryDisplayNames?.of(country) || country,
+    callingCode: getCountryCallingCode(country),
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
 export function RoomDetail({ slug, onBack }: RoomDetailProps) {
   const router = useRouter();
 
@@ -122,6 +142,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
   const [roomsQuantity, setRoomsQuantity] = useState(1);
   const [voucher, setVoucher] = useState("");
   const [phone, setPhone] = useState<string>("");
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>("PH");
   const [promos, setPromos] = useState<Promo[]>([]);
 
   // Guest Info States
@@ -150,6 +171,48 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
   }, []);
 
   const getMinDate = () => format(new Date(), "yyyy-MM-dd");
+
+  const selectedCallingCode = useMemo(
+    () => getCountryCallingCode(phoneCountry),
+    [phoneCountry],
+  );
+
+  const fullPhoneNumber = useMemo(() => {
+    const digits = phone.replace(/\D/g, "");
+    if (!digits) return "";
+
+    const parsed = parsePhoneNumberFromString(digits, phoneCountry);
+    return parsed?.number || `+${selectedCallingCode}${digits}`;
+  }, [phone, phoneCountry, selectedCallingCode]);
+
+  const validatePhone = useCallback(() => {
+    const digits = phone.replace(/\D/g, "");
+
+    if (!digits) {
+      return "Phone number is required";
+    }
+
+    const lengthError = validatePhoneNumberLength(digits, phoneCountry);
+
+    if (lengthError === "TOO_SHORT") {
+      return `Phone number is too short for ${countryDisplayNames?.of(phoneCountry) || phoneCountry}`;
+    }
+
+    if (lengthError === "TOO_LONG") {
+      return `Phone number is too long for ${countryDisplayNames?.of(phoneCountry) || phoneCountry}`;
+    }
+
+    if (lengthError === "INVALID_LENGTH") {
+      return `Phone number has an invalid digit count for ${countryDisplayNames?.of(phoneCountry) || phoneCountry}`;
+    }
+
+    const parsed = parsePhoneNumberFromString(digits, phoneCountry);
+    if (!parsed || !parsed.isValid()) {
+      return `Please enter a valid phone number for ${countryDisplayNames?.of(phoneCountry) || phoneCountry}`;
+    }
+
+    return null;
+  }, [phone, phoneCountry]);
 
   const dateRange: [Date, Date] | null = useMemo(() => {
     const start = startDateString ? parseISO(startDateString) : null;
@@ -319,8 +382,6 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
     const normalizeText = (value: string) =>
       value.trim().toLowerCase().replace(/\s+/g, " ");
 
-    const normalizePhone = (value: string) => value.replace(/\D/g, "");
-
     return [
       bookingMode,
       startDateString,
@@ -329,7 +390,8 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       normalizeText(fname),
       normalizeText(lname),
       normalizeText(email),
-      normalizePhone(phone),
+      phoneCountry,
+      fullPhoneNumber,
     ].join("|");
   }, [
     bookingMode,
@@ -339,7 +401,8 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
     fname,
     lname,
     email,
-    phone,
+    phoneCountry,
+    fullPhoneNumber,
   ]);
 
   const getStoredInquiries = useCallback((): StoredInquiry[] => {
@@ -394,8 +457,9 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       toast.error("Please select dates");
       return;
     }
-    if (!phone.trim()) {
-      toast.error("Phone number is required");
+    const phoneError = validatePhone();
+    if (phoneError) {
+      toast.error(phoneError);
       return;
     }
     if (!fname.trim() || !lname.trim() || !email.trim()) {
@@ -437,7 +501,9 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       fname: fname.trim(),
       lname: lname.trim(),
       email: email.trim(),
-      phone: phone.trim(),
+      phone: fullPhoneNumber,
+      phone_country: phoneCountry,
+      phone_country_code: `+${selectedCallingCode}`,
       check_in: dateRange![0],
       check_out: dateRange![1],
       booking_mode: bookingMode,
@@ -478,6 +544,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
         setLname("");
         setEmail("");
         setPhone("");
+        setPhoneCountry("PH");
         setVoucher("");
         setStartDateString("");
         setEndDateString("");
@@ -1025,18 +1092,53 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                         required
                       />
 
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-neutral-500 font-semibold border-r border-neutral-200 pr-3">
-                          🇵🇭 +63
-                        </span>
-                        <input
-                          type="tel"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="917 123 4567"
-                          className="w-full pl-24 py-3 border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-neutral-900"
-                          required
-                        />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">
+                          Phone Number
+                        </label>
+                        <div className="flex rounded-xl border border-neutral-200 bg-white focus-within:ring-2 focus-within:ring-neutral-900 focus-within:border-neutral-900">
+                          <select
+                            value={phoneCountry}
+                            onChange={(e) => {
+                              setPhoneCountry(e.target.value as CountryCode);
+                              setPhone("");
+                            }}
+                            className="w-[46%] min-w-0 rounded-l-xl border-0 border-r border-neutral-200 bg-transparent px-3 py-3 text-sm focus:ring-0"
+                            aria-label="Country calling code"
+                          >
+                            {COUNTRY_OPTIONS.map((country) => (
+                              <option key={country.code} value={country.code}>
+                                {country.name} (+{country.callingCode})
+                              </option>
+                            ))}
+                          </select>
+
+                          <div className="flex flex-1 items-center min-w-0">
+                            <span className="pl-3 pr-2 text-sm font-semibold text-neutral-500">
+                              +{selectedCallingCode}
+                            </span>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              autoComplete="tel-national"
+                              value={phone}
+                              onChange={(e) =>
+                                setPhone(
+                                  e.target.value
+                                    .replace(/\D/g, "")
+                                    .slice(0, 15),
+                                )
+                              }
+                              placeholder="Phone number"
+                              className="min-w-0 flex-1 rounded-r-xl border-0 px-2 py-3 text-sm focus:ring-0"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-neutral-400 ml-1">
+                          Enter the number without the country code. Its digit
+                          count will be validated for the selected country.
+                        </p>
                       </div>
 
                       <input
@@ -1259,7 +1361,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-neutral-500">Phone</span>
                       <span className="font-medium text-neutral-900">
-                        +63 {phone}
+                        {fullPhoneNumber || `+${selectedCallingCode}`}
                       </span>
                     </div>
                   </div>
