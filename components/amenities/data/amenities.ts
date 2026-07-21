@@ -143,7 +143,7 @@ export const amenitiesData: Amenity[] = [
       "/assets/Amenities/sky-lounge-bar/1.webp",
     ],
     operatingDays: "Monday - Sunday",
-    operatingHours: "5:00 PM - 2:00 AM",
+    operatingHours: "7:00 AM - 12:00 AM",
     location: "!5th Floor, Near Sky Lounge Dining",
     menu: [
       {
@@ -241,7 +241,7 @@ export const amenitiesData: Amenity[] = [
       "/assets/Amenities/sky-lounge-dining/7.webp",
     ],
     operatingDays: "Monday - Sunday",
-    operatingHours: "5:00 PM - 2:00 AM",
+    operatingHours: "7:00 AM - 12:00 AM",
     location: "!5th Floor, Near Sky Lounge Bar",
     menu: [
       {

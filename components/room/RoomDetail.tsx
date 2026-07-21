@@ -1,42 +1,84 @@
 "use client";
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Room } from '@/app/room/page';
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { Room } from "@/app/room/page";
 import {
-  ArrowLeft, Users, Baby, Loader2, ChevronLeft, ChevronRight,
-  Minus, Plus, Calendar, CreditCard, CheckCircle2, Phone, X, Utensils, Bed, Zap, Wifi, CalendarCheck, Receipt,
-  Dog, Ban, Search, Home, Clock, Coffee, Droplet,
-  AirVent, Tv, Lightbulb, ShowerHead, Mail, User, Hash, Building2, CalendarDays, Banknote, Tag, Check, Globe, ExternalLink
-} from 'lucide-react';
-import { ImageWithFallback } from '@/components/err/ImageWithFallback';
-import { motion, AnimatePresence } from 'framer-motion';
-import gsap from 'gsap';
-import { format, addDays, isAfter, differenceInDays, parseISO } from 'date-fns';
-import toast, { Toaster } from 'react-hot-toast';
-import { BackButton } from '@/components/providers/backbutton';
-import { useRouter } from 'next/navigation';
-import { Footer } from '@/components/Footer';
+  ArrowLeft,
+  Users,
+  Baby,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  Calendar,
+  CreditCard,
+  CheckCircle2,
+  Phone,
+  X,
+  Utensils,
+  Bed,
+  Zap,
+  Wifi,
+  CalendarCheck,
+  Receipt,
+  Dog,
+  Ban,
+  Search,
+  Home,
+  Clock,
+  Coffee,
+  Droplet,
+  AirVent,
+  Tv,
+  Lightbulb,
+  ShowerHead,
+  Mail,
+  User,
+  Hash,
+  Building2,
+  CalendarDays,
+  Banknote,
+  Tag,
+  Check,
+  Globe,
+  ExternalLink,
+} from "lucide-react";
+import { ImageWithFallback } from "@/components/err/ImageWithFallback";
+import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import { format, addDays, isAfter, differenceInDays, parseISO } from "date-fns";
+import toast, { Toaster } from "react-hot-toast";
+import { BackButton } from "@/components/providers/backbutton";
+import { useRouter } from "next/navigation";
+import { Footer } from "@/components/Footer";
 
 // Map the old FontAwesome icons to new Lucide icons
-const Icon = ({ name, className }: { name: keyof typeof IconMapping; className?: string }) => {
+const Icon = ({
+  name,
+  className,
+}: {
+  name: keyof typeof IconMapping;
+  className?: string;
+}) => {
   const Component = IconMapping[name]?.icon || X;
-  const defaultClass = IconMapping[name]?.className || 'text-gray-500';
+  const defaultClass = IconMapping[name]?.className || "text-gray-500";
   return <Component className={className || defaultClass} />;
 };
 
 const IconMapping = {
-  faBroom: { icon: Utensils, className: 'text-green-700' },
-  faWater: { icon: Droplet, className: 'text-green-700' },
-  faTv: { icon: Tv, className: 'text-green-700' },
-  faMugHot: { icon: Coffee, className: 'text-green-700' },
-  faBed: { icon: Bed, className: 'text-green-700' },
-  faPlug: { icon: Lightbulb, className: 'text-green-700' },
-  faWifi: { icon: Wifi, className: 'text-green-700' },
-  faDog: { icon: Dog, className: 'text-green-700' },
-  faBan: { icon: Ban, className: 'text-red-500' },
-  faCalendarCheck: { icon: CalendarCheck, className: 'text-green-700' },
-  faReceipt: { icon: Receipt, className: 'text-green-700' },
-  faXmark: { icon: X, className: 'text-white' },
-  faPhone: { icon: Phone, className: 'text-gray-400' },
+  faBroom: { icon: Utensils, className: "text-green-700" },
+  faWater: { icon: Droplet, className: "text-green-700" },
+  faTv: { icon: Tv, className: "text-green-700" },
+  faMugHot: { icon: Coffee, className: "text-green-700" },
+  faBed: { icon: Bed, className: "text-green-700" },
+  faPlug: { icon: Lightbulb, className: "text-green-700" },
+  faWifi: { icon: Wifi, className: "text-green-700" },
+  faDog: { icon: Dog, className: "text-green-700" },
+  faBan: { icon: Ban, className: "text-red-500" },
+  faCalendarCheck: { icon: CalendarCheck, className: "text-green-700" },
+  faReceipt: { icon: Receipt, className: "text-green-700" },
+  faXmark: { icon: X, className: "text-white" },
+  faPhone: { icon: Phone, className: "text-gray-400" },
 } as const;
 
 interface RoomDetailProps {
@@ -56,6 +98,12 @@ interface Promo {
 
 type BookingMode = "daily" | "monthly";
 
+type StoredInquiry = {
+  fingerprint: string;
+  submittedAt: string;
+};
+
+const INQUIRY_STORAGE_KEY = "lgr_room_inquiries";
 const PROMO_URL = "https://lagranderesidence.com/api/api.php?endpoint=promos";
 
 export function RoomDetail({ slug, onBack }: RoomDetailProps) {
@@ -68,23 +116,25 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
   // Booking States
   const [bookingMode, setBookingMode] = useState<BookingMode>("daily");
-  const [startDateString, setStartDateString] = useState<string>('');
-  const [endDateString, setEndDateString] = useState<string>('');
+  const [startDateString, setStartDateString] = useState<string>("");
+  const [endDateString, setEndDateString] = useState<string>("");
   const [monthlyNights, setMonthlyNights] = useState(1);
   const [roomsQuantity, setRoomsQuantity] = useState(1);
   const [voucher, setVoucher] = useState("");
-  const [phone, setPhone] = useState<string>('');
+  const [phone, setPhone] = useState<string>("");
   const [promos, setPromos] = useState<Promo[]>([]);
 
   // Guest Info States
-  const [fname, setFname] = useState('');
-  const [lname, setLname] = useState('');
-  const [email, setEmail] = useState('');
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+  const [email, setEmail] = useState("");
 
   // Calculation States
   const [total, setTotal] = useState(0);
   const [voucherDiscount, setVoucherDiscount] = useState(0);
-  const [voucherType, setVoucherType] = useState<"percent" | "price" | null>(null);
+  const [voucherType, setVoucherType] = useState<"percent" | "price" | null>(
+    null,
+  );
   const [matchedVoucherId, setMatchedVoucherId] = useState<number | null>(null);
 
   // Modal States
@@ -99,7 +149,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
     return isNaN(num) ? "0" : num.toLocaleString();
   }, []);
 
-  const getMinDate = () => format(new Date(), 'yyyy-MM-dd');
+  const getMinDate = () => format(new Date(), "yyyy-MM-dd");
 
   const dateRange: [Date, Date] | null = useMemo(() => {
     const start = startDateString ? parseISO(startDateString) : null;
@@ -111,14 +161,18 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
   const fetchRoomDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`https://lagranderesidence.com/api/api.php?endpoint=rooms`);
+      const res = await fetch(
+        `https://lagranderesidence.com/api/api.php?endpoint=rooms`,
+      );
       const allRooms: Room[] = await res.json();
-      const foundRoom = allRooms.find(r => r.slug === slug || r.id.toString() === slug);
+      const foundRoom = allRooms.find(
+        (r) => r.slug === slug || r.id.toString() === slug,
+      );
       if (foundRoom) {
         setRoom(foundRoom);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -129,7 +183,9 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       const res = await fetch(PROMO_URL, { cache: "no-store" });
       const data = await res.json();
       setPromos(data);
-    } catch (err) { console.error("Failed to fetch promos", err); }
+    } catch (err) {
+      console.error("Failed to fetch promos", err);
+    }
   };
 
   useEffect(() => {
@@ -138,7 +194,10 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
   }, [fetchRoomDetail]);
 
   useEffect(() => {
-    if (!startDateString) { setEndDateString(''); return; }
+    if (!startDateString) {
+      setEndDateString("");
+      return;
+    }
     const start = parseISO(startDateString);
     let calculatedEnd: Date;
 
@@ -151,17 +210,22 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
         calculatedEnd = currentEnd;
       }
     }
-    setEndDateString(format(calculatedEnd, 'yyyy-MM-dd'));
+    setEndDateString(format(calculatedEnd, "yyyy-MM-dd"));
   }, [startDateString, bookingMode, monthlyNights]);
 
   useEffect(() => {
     if (!room) return;
 
-    const pricePerUnit = bookingMode === "daily" ? Number(room.daily_price) || 0 : Number(room.monthly_price) || 0;
+    const pricePerUnit =
+      bookingMode === "daily"
+        ? Number(room.daily_price) || 0
+        : Number(room.monthly_price) || 0;
     let unitCount = 0;
 
     if (bookingMode === "daily") {
-      unitCount = dateRange ? Math.max(1, differenceInDays(dateRange[1], dateRange[0])) : 0;
+      unitCount = dateRange
+        ? Math.max(1, differenceInDays(dateRange[1], dateRange[0]))
+        : 0;
     } else {
       unitCount = monthlyNights;
     }
@@ -174,7 +238,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
     const enteredCode = voucher.trim().toUpperCase();
     if (enteredCode && promos.length > 0) {
-      const promo = promos.find(p => p.code.toUpperCase() === enteredCode);
+      const promo = promos.find((p) => p.code.toUpperCase() === enteredCode);
 
       if (promo) {
         const today = new Date();
@@ -198,18 +262,41 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
     let finalTotal = subTotal;
     if (discType === "percent") {
-      finalTotal = subTotal - (subTotal * (discVal / 100));
+      finalTotal = subTotal - subTotal * (discVal / 100);
     } else if (discType === "price") {
       finalTotal = subTotal - discVal;
     }
 
     setTotal(Math.max(0, finalTotal));
-  }, [dateRange, voucher, room, promos, bookingMode, monthlyNights, roomsQuantity]);
+  }, [
+    dateRange,
+    voucher,
+    room,
+    promos,
+    bookingMode,
+    monthlyNights,
+    roomsQuantity,
+  ]);
 
   useEffect(() => {
     if (room && detailsRef.current && pricingRef.current) {
-      gsap.fromTo(detailsRef.current.children, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out', delay: 0.2 });
-      gsap.fromTo(pricingRef.current, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out', delay: 0.4 });
+      gsap.fromTo(
+        detailsRef.current.children,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power2.out",
+          delay: 0.2,
+        },
+      );
+      gsap.fromTo(
+        pricingRef.current,
+        { opacity: 0, x: 20 },
+        { opacity: 1, x: 0, duration: 0.6, ease: "power2.out", delay: 0.4 },
+      );
     }
   }, [room]);
 
@@ -228,12 +315,92 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
   //   return !stat || stat === 2;
   // }, [room]);
 
+  const getInquiryFingerprint = useCallback(() => {
+    const normalizeText = (value: string) =>
+      value.trim().toLowerCase().replace(/\s+/g, " ");
+
+    const normalizePhone = (value: string) => value.replace(/\D/g, "");
+
+    return [
+      bookingMode,
+      startDateString,
+      endDateString,
+      String(roomsQuantity),
+      normalizeText(fname),
+      normalizeText(lname),
+      normalizeText(email),
+      normalizePhone(phone),
+    ].join("|");
+  }, [
+    bookingMode,
+    startDateString,
+    endDateString,
+    roomsQuantity,
+    fname,
+    lname,
+    email,
+    phone,
+  ]);
+
+  const getStoredInquiries = useCallback((): StoredInquiry[] => {
+    if (typeof window === "undefined") return [];
+
+    try {
+      const stored = window.localStorage.getItem(INQUIRY_STORAGE_KEY);
+      if (!stored) return [];
+
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn("Unable to read saved inquiries from localStorage", error);
+      return [];
+    }
+  }, []);
+
+  const isDuplicateInquiry = useCallback(() => {
+    const fingerprint = getInquiryFingerprint();
+    return getStoredInquiries().some(
+      (inquiry) => inquiry.fingerprint === fingerprint,
+    );
+  }, [getInquiryFingerprint, getStoredInquiries]);
+
+  const saveInquiryToLocalStorage = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const inquiries = getStoredInquiries();
+      const fingerprint = getInquiryFingerprint();
+
+      const updatedInquiries: StoredInquiry[] = [
+        ...inquiries.filter((item) => item.fingerprint !== fingerprint),
+        {
+          fingerprint,
+          submittedAt: new Date().toISOString(),
+        },
+      ].slice(-100);
+
+      window.localStorage.setItem(
+        INQUIRY_STORAGE_KEY,
+        JSON.stringify(updatedInquiries),
+      );
+    } catch (error) {
+      console.warn("Unable to save inquiry to localStorage", error);
+    }
+  }, [getInquiryFingerprint, getStoredInquiries]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dateRange) { toast.error("Please select dates"); return; }
-    if (!phone.trim()) { toast.error("Phone number is required"); return; }
+    if (!dateRange) {
+      toast.error("Please select dates");
+      return;
+    }
+    if (!phone.trim()) {
+      toast.error("Phone number is required");
+      return;
+    }
     if (!fname.trim() || !lname.trim() || !email.trim()) {
-      toast.error("Please fill in all guest information"); return;
+      toast.error("Please fill in all guest information");
+      return;
     }
 
     // Email validation
@@ -243,10 +410,27 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       return;
     }
 
+    if (isDuplicateInquiry()) {
+      toast.error(
+        "This inquiry has already been submitted from this device. Please change the booking or guest details before sending again.",
+      );
+      return;
+    }
+
     setConfirmModalOpen(true);
   };
 
   const handleConfirmBooking = async () => {
+    if (isSubmitting) return;
+
+    if (isDuplicateInquiry()) {
+      toast.error(
+        "This inquiry has already been submitted from this device. Please change the booking or guest details before sending again.",
+      );
+      setConfirmModalOpen(false);
+      return;
+    }
+
     setIsSubmitting(true);
 
     const payload = {
@@ -257,7 +441,10 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       check_in: dateRange![0],
       check_out: dateRange![1],
       booking_mode: bookingMode,
-      count: bookingMode === 'daily' ? differenceInDays(dateRange![1], dateRange![0]) : monthlyNights,
+      count:
+        bookingMode === "daily"
+          ? differenceInDays(dateRange![1], dateRange![0])
+          : monthlyNights,
       room_count: roomsQuantity,
       total: total,
       voucher_id: matchedVoucherId,
@@ -265,36 +452,46 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
       room_id: room!.id,
       room_title: room!.title,
       room_slug: room!.slug,
-      submitted_at: new Date().toISOString()
+      submitted_at: new Date().toISOString(),
     };
 
     try {
-      const response = await fetch("https://lagranderesidence.com/api/api.php?endpoint=booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const response = await fetch(
+        "https://lagranderesidence.com/api/api.php?endpoint=booking",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
 
       const result = await response.json();
 
       if (response.ok && result.success) {
-        toast.success("Booking request sent successfully! Check your email for confirmation.");
+        saveInquiryToLocalStorage();
+        toast.success(
+          "Booking request sent successfully! Check your email for confirmation.",
+        );
         setConfirmModalOpen(false);
         // Reset form
-        setFname('');
-        setLname('');
-        setEmail('');
-        setPhone('');
-        setVoucher('');
-        setStartDateString('');
-        setEndDateString('');
+        setFname("");
+        setLname("");
+        setEmail("");
+        setPhone("");
+        setVoucher("");
+        setStartDateString("");
+        setEndDateString("");
         setRoomsQuantity(1);
         setMonthlyNights(1);
       } else {
-        throw new Error(result.message || 'Failed to process booking');
+        throw new Error(result.message || "Failed to process booking");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to process booking. Please try again.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to process booking. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -302,18 +499,39 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
   const images = room?.images ?? [];
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-neutral-400" /></div>;
-  if (error || !room) return <div className="min-h-screen flex items-center justify-center text-center"><div><p className="mb-4">{error || 'Room not found'}</p><button onClick={onBack} className="px-4 py-2 bg-neutral-900 text-white rounded-md">Back</button></div></div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+      </div>
+    );
+  if (error || !room)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <div>
+          <p className="mb-4">{error || "Room not found"}</p>
+          <button
+            onClick={onBack}
+            className="px-4 py-2 bg-neutral-900 text-white rounded-md"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-neutral-50/50">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-neutral-50/50"
+    >
       <Toaster position="top-center" />
 
-      <BackButton onClick={() => router.push('/room')} />
+      <BackButton onClick={() => router.push("/room")} />
 
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-
           {/* Left Side: Gallery & Info */}
           <div ref={detailsRef} className="lg:col-span-2">
             {/* <div className="relative aspect-[16/9] bg-neutral-100 rounded-2xl overflow-hidden mb-8 group">
@@ -331,89 +549,104 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
             </div> */}
 
             <div className="mb-10">
-  <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-neutral-100 shadow-sm group">
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={currentImageIndex}
-        initial={{ opacity: 0, scale: 1.02 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.98 }}
-        transition={{ duration: 0.35 }}
-        className="h-full w-full"
-      >
-        <ImageWithFallback
-          src={images[currentImageIndex]}
-          alt={room.title || "Hotel room"}
-          className="h-full w-full object-cover"
-        />
-      </motion.div>
-    </AnimatePresence>
+              <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-neutral-100 shadow-sm group">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentImageIndex}
+                    initial={{ opacity: 0, scale: 1.02 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.35 }}
+                    className="h-full w-full"
+                  >
+                    <ImageWithFallback
+                      src={images[currentImageIndex]}
+                      alt={room.title || "Hotel room"}
+                      className="h-full w-full object-cover"
+                    />
+                  </motion.div>
+                </AnimatePresence>
 
-    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
 
-    <div className="absolute left-6 bottom-6 text-white">
-      <p className="text-sm uppercase tracking-[0.25em] text-white/80">
-        {room.title || "Hotel Room"}
-      </p>
-    </div>
+                <div className="absolute left-6 bottom-6 text-white">
+                  <p className="text-sm uppercase tracking-[0.25em] text-white/80">
+                    {room.title || "Hotel Room"}
+                  </p>
+                </div>
 
-    <div className="absolute right-6 bottom-6 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-neutral-800 shadow-lg backdrop-blur">
-      {currentImageIndex + 1} / {images.length}
-    </div>
+                <div className="absolute right-6 bottom-6 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-neutral-800 shadow-lg backdrop-blur">
+                  {currentImageIndex + 1} / {images.length}
+                </div>
 
-    {images.length > 1 && (
-      <>
-        <button
-          onClick={() =>
-            setCurrentImageIndex((p) => (p - 1 + images.length) % images.length)
-          }
-          className="absolute left-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition hover:bg-white hover:scale-105 opacity-0 group-hover:opacity-100"
-          aria-label="Previous image"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() =>
+                        setCurrentImageIndex(
+                          (p) => (p - 1 + images.length) % images.length,
+                        )
+                      }
+                      className="absolute left-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition hover:bg-white hover:scale-105 opacity-0 group-hover:opacity-100"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
 
-        <button
-          onClick={() => setCurrentImageIndex((p) => (p + 1) % images.length)}
-          className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition hover:bg-white hover:scale-105 opacity-0 group-hover:opacity-100"
-          aria-label="Next image"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </>
-    )}
-  </div>
+                    <button
+                      onClick={() =>
+                        setCurrentImageIndex((p) => (p + 1) % images.length)
+                      }
+                      className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-lg backdrop-blur transition hover:bg-white hover:scale-105 opacity-0 group-hover:opacity-100"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+              </div>
 
-  {images.length > 1 && (
-    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {images.map((image, index) => (
-        <button
-          key={index}
-          onClick={() => setCurrentImageIndex(index)}
-          className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl border transition ${
-            currentImageIndex === index
-              ? "border-neutral-900 opacity-100"
-              : "border-transparent opacity-70 hover:opacity-100"
-          }`}
-          aria-label={`View room image ${index + 1}`}
-        >
-          <ImageWithFallback
-            src={image}
-            alt={`${room.title || "Hotel room"} ${index + 1}`}
-            className="h-full w-full object-cover"
-          />
-        </button>
-      ))}
-    </div>
-  )}
-</div>
+              {images.length > 1 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl border transition ${
+                        currentImageIndex === index
+                          ? "border-neutral-900 opacity-100"
+                          : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
+                      aria-label={`View room image ${index + 1}`}
+                    >
+                      <ImageWithFallback
+                        src={image}
+                        alt={`${room.title || "Hotel room"} ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <h1 className="text-4xl font-bold text-neutral-900 mb-2">{room.title}</h1>
-            <p className="text-neutral-500 mb-6">Phase {room.phase} • {room.type}</p>
+            <h1 className="text-4xl font-bold text-neutral-900 mb-2">
+              {room.title}
+            </h1>
+            <p className="text-neutral-500 mb-6">
+              Phase {room.phase} • {room.type}
+            </p>
 
             <div className="flex gap-8 mb-8 pb-8 border-b border-neutral-200">
-              <div className="flex items-center gap-2 text-neutral-700 font-medium"><Users className="w-5 h-5 text-neutral-400" /> {room.pax} Adults</div>
-              {room.child! > 0 && <div className="flex items-center gap-2 text-neutral-700 font-medium"><Baby className="w-5 h-5 text-neutral-400" /> {room.child} Children</div>}
+              <div className="flex items-center gap-2 text-neutral-700 font-medium">
+                <Users className="w-5 h-5 text-neutral-400" /> {room.pax} Adults
+              </div>
+              {room.child! > 0 && (
+                <div className="flex items-center gap-2 text-neutral-700 font-medium">
+                  <Baby className="w-5 h-5 text-neutral-400" /> {room.child}{" "}
+                  Children
+                </div>
+              )}
             </div>
             <section>
               <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2">
@@ -424,95 +657,100 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                 dangerouslySetInnerHTML={{ __html: room.description || "" }}
               />
 
-{/* Amenities */}
-            <div className="grid sm:grid-cols-2 gap-6 mt-8">
-{/* Daily Rate */}
-              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                <h3 className="font-semibold text-lg flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Icon name="faBed" className="w-5 h-5 text-green-700" />
-                    Daily Rate
-                  </span>
+              {/* Amenities */}
+              <div className="grid sm:grid-cols-2 gap-6 mt-8">
+                {/* Daily Rate */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                  <h3 className="font-semibold text-lg flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Icon name="faBed" className="w-5 h-5 text-green-700" />
+                      Daily Rate
+                    </span>
 
-                  <span className="text-green-700 font-bold text-xl">
-                    {formatPrice(room.daily_price)}
-                  </span>
-                </h3>
+                    <span className="text-green-700 font-bold text-xl">
+                      {formatPrice(room.daily_price)}
+                    </span>
+                  </h3>
 
-                <p className="text-sm text-gray-500 mt-1 mb-4">
-                  Inclusive of the following:
-                </p>
+                  <p className="text-sm text-gray-500 mt-1 mb-4">
+                    Inclusive of the following:
+                  </p>
 
-                <ul className="text-gray-700 text-sm space-y-2">
-                  <li className="flex items-center gap-2">
-                    <Icon name="faBroom" className="w-4 h-4 text-green-700" />
-                    Room Cleaning
-                  </li>
+                  <ul className="text-gray-700 text-sm space-y-2">
+                    <li className="flex items-center gap-2">
+                      <Icon name="faBroom" className="w-4 h-4 text-green-700" />
+                      Room Cleaning
+                    </li>
 
-                  <li className="flex items-center gap-2">
-                    <Icon name="faWater" className="w-4 h-4 text-green-700" />
-                    Water & Electricity
-                  </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="faWater" className="w-4 h-4 text-green-700" />
+                      Water & Electricity
+                    </li>
 
-                  <li className="flex items-center gap-2">
-                    <Icon name="faTv" className="w-4 h-4 text-green-700" />
-                    TV Cable & Internet
-                  </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="faTv" className="w-4 h-4 text-green-700" />
+                      TV Cable & Internet
+                    </li>
 
-                  <li className="flex items-center gap-2">
-                    <Icon name="faMugHot" className="w-4 h-4 text-green-700" />
-                    Coffee Setup
-                  </li>
+                    <li className="flex items-center gap-2">
+                      <Icon
+                        name="faMugHot"
+                        className="w-4 h-4 text-green-700"
+                      />
+                      Coffee Setup
+                    </li>
 
-                  <li className="flex items-center gap-2">
-                    <Icon name="faBed" className="w-4 h-4 text-green-700" />
-                    Linen & Towels
-                  </li>
-                </ul>
+                    <li className="flex items-center gap-2">
+                      <Icon name="faBed" className="w-4 h-4 text-green-700" />
+                      Linen & Towels
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Monthly Rate */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                  <h3 className="font-semibold text-lg flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Icon name="faBed" className="w-5 h-5 text-green-700" />
+                      Monthly Rate
+                    </span>
+
+                    <div className="text-right">
+                      <div className="text-green-700 font-bold text-xl">
+                        {formatPrice(room.monthly_price)}
+                      </div>
+
+                      <div className="text-xs text-gray-500">per 30 nights</div>
+                    </div>
+                  </h3>
+
+                  <p className="text-sm text-gray-500 mt-1 mb-4">
+                    Monthly inclusions & utilities:
+                  </p>
+
+                  <ul className="text-gray-700 text-sm space-y-2">
+                    <li className="flex items-center gap-2">
+                      <Icon name="faPlug" className="w-4 h-4 text-green-700" />
+                      Electricity – Meter Reading
+                    </li>
+
+                    <li className="flex items-start gap-2">
+                      <Icon
+                        name="faWifi"
+                        className="w-4 h-4 mt-1 text-green-700"
+                      />
+
+                      <span>
+                        Service Package from ₱7,800 includes cleaning, linen,
+                        towels, cable & internet, and up to 3 cubic meters of
+                        water.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
-{/* Monthly Rate */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-              <h3 className="font-semibold text-lg flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Icon name="faBed" className="w-5 h-5 text-green-700" />
-                  Monthly Rate
-                </span>
-
-                <div className="text-right">
-                  <div className="text-green-700 font-bold text-xl">
-                    {formatPrice(room.monthly_price)}
-                  </div>
-
-                  <div className="text-xs text-gray-500">
-                    per 30 nights
-                  </div>
-                </div>
-              </h3>
-
-              <p className="text-sm text-gray-500 mt-1 mb-4">
-                Monthly inclusions & utilities:
-              </p>
-
-              <ul className="text-gray-700 text-sm space-y-2">
-                <li className="flex items-center gap-2">
-                  <Icon name="faPlug" className="w-4 h-4 text-green-700" />
-                  Electricity – Meter Reading
-                </li>
-
-                <li className="flex items-start gap-2">
-                  <Icon name="faWifi" className="w-4 h-4 mt-1 text-green-700" />
-
-                  <span>
-                    Service Package from ₱7,800 includes cleaning, linen,
-                    towels, cable & internet, and up to 3 cubic meters of water.
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-{/* Policies */}
+              {/* Policies */}
               <div className="mt-10 space-y-5 text-gray-700 text-sm">
                 <div>
                   <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -520,7 +758,8 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                     Pets
                   </h3>
                   <p className="flex items-center gap-2 text-gray-600">
-                    <Icon name="faBan" className="w-4 h-4 text-red-500" /> Pets not allowed
+                    <Icon name="faBan" className="w-4 h-4 text-red-500" /> Pets
+                    not allowed
                   </p>
                 </div>
 
@@ -542,10 +781,7 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
                 <div>
                   <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <Icon
-                      name="faReceipt"
-                      className="w-5 h-5 text-green-700"
-                    />
+                    <Icon name="faReceipt" className="w-5 h-5 text-green-700" />
                     Cancellation Policy
                   </h3>
                   <p>
@@ -559,8 +795,10 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
 
           {/* Right Side: Booking Form or Unavailable Notice */}
           <aside className="lg:col-span-1">
-            <div ref={pricingRef} className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm sticky top-24">
-
+            <div
+              ref={pricingRef}
+              className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm sticky top-24"
+            >
               {isUnavailable ? (
                 /* --- UNAVAILABLE STATE --- */
                 <div className="py-4 space-y-6">
@@ -568,9 +806,12 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                     <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <X className="w-6 h-6 text-red-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-neutral-900 mb-2">Room Unavailable</h3>
+                    <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                      Room Unavailable
+                    </h3>
                     <p className="text-sm text-neutral-600 leading-relaxed">
-                      This room is currently not available for online booking. Please reach out to our team for the latest availability.
+                      This room is currently not available for online booking.
+                      Please reach out to our team for the latest availability.
                     </p>
                   </div>
 
@@ -587,8 +828,12 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                         <Calendar className="w-4 h-4 text-neutral-600" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase text-neutral-400">Email Us</p>
-                        <p className="text-sm font-semibold text-neutral-900">reservations@lagranderesidence.com</p>
+                        <p className="text-[10px] font-bold uppercase text-neutral-400">
+                          Email Us
+                        </p>
+                        <p className="text-sm font-semibold text-neutral-900">
+                          reservations@lagranderesidence.com
+                        </p>
                       </div>
                     </a>
 
@@ -600,56 +845,65 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                         <Phone className="w-4 h-4 text-neutral-600" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase text-neutral-400">Call Us</p>
-                        <p className="text-sm font-semibold text-neutral-900">+63 922 375 8679</p>
+                        <p className="text-[10px] font-bold uppercase text-neutral-400">
+                          Call Us
+                        </p>
+                        <p className="text-sm font-semibold text-neutral-900">
+                          +63 922 375 8679
+                        </p>
                       </div>
                     </a>
                   </div>
                 </div>
-              )  : (
+              ) : (
                 /* --- BOOKING FORM --- */
                 <>
                   {/* Pricing Mode Toggle */}
-<div className="flex p-1 bg-neutral-100 rounded-xl mb-8">
-  <button
-    onClick={() => setBookingMode("daily")}
-    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${
-      bookingMode === "daily"
-        ? "bg-white shadow-sm text-neutral-900"
-        : "text-neutral-500 hover:text-neutral-700"
-    }`}
-  >
-    Daily
-    <span className="block text-xs font-normal opacity-70">
-      ₱{formatPrice(room.daily_price)}
-    </span>
-  </button>
+                  <div className="flex p-1 bg-neutral-100 rounded-xl mb-8">
+                    <button
+                      onClick={() => setBookingMode("daily")}
+                      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${
+                        bookingMode === "daily"
+                          ? "bg-white shadow-sm text-neutral-900"
+                          : "text-neutral-500 hover:text-neutral-700"
+                      }`}
+                    >
+                      Daily
+                      <span className="block text-xs font-normal opacity-70">
+                        ₱{formatPrice(room.daily_price)}
+                      </span>
+                    </button>
 
-  {room.monthly_price != null && Number(room.monthly_price) > 0 && (
-    <button
-      onClick={() => setBookingMode("monthly")}
-      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${
-        bookingMode === "monthly"
-          ? "bg-white shadow-sm text-neutral-900"
-          : "text-neutral-500 hover:text-neutral-700"
-      }`}
-    >
-      Monthly
-      <span className="block text-xs font-normal opacity-70">
-        ₱{formatPrice(room.monthly_price)}
-      </span>
-    </button>
-  )}
-</div>
+                    {room.monthly_price != null &&
+                      Number(room.monthly_price) > 0 && (
+                        <button
+                          onClick={() => setBookingMode("monthly")}
+                          className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${
+                            bookingMode === "monthly"
+                              ? "bg-white shadow-sm text-neutral-900"
+                              : "text-neutral-500 hover:text-neutral-700"
+                          }`}
+                        >
+                          Monthly
+                          <span className="block text-xs font-normal opacity-70">
+                            ₱{formatPrice(room.monthly_price)}
+                          </span>
+                        </button>
+                      )}
+                  </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* SECTION: Stay Details */}
                     <div className="space-y-4">
-                      <h4 className="text-[11px] font-bold uppercase text-neutral-400 tracking-widest border-b border-neutral-50 pb-2">Stay Details</h4>
+                      <h4 className="text-[11px] font-bold uppercase text-neutral-400 tracking-widest border-b border-neutral-50 pb-2">
+                        Stay Details
+                      </h4>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="col-span-2 sm:col-span-1">
-                          <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Check-in</label>
+                          <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">
+                            Check-in
+                          </label>
                           <input
                             type="date"
                             value={startDateString}
@@ -661,25 +915,47 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                         </div>
 
                         <div className="col-span-2 sm:col-span-1">
-                          {bookingMode === 'daily' ? (
+                          {bookingMode === "daily" ? (
                             <>
-                              <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Check-out</label>
+                              <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">
+                                Check-out
+                              </label>
                               <input
                                 type="date"
                                 value={endDateString}
                                 min={startDateString}
-                                onChange={(e) => setEndDateString(e.target.value)}
+                                onChange={(e) =>
+                                  setEndDateString(e.target.value)
+                                }
                                 className="w-full mt-1.5 py-3 px-4 border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 transition-all"
                                 required
                               />
                             </>
                           ) : (
                             <>
-                              <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Duration</label>
+                              <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">
+                                Duration
+                              </label>
                               <div className="flex items-center justify-between border border-neutral-200 rounded-xl px-2 py-1.5 mt-1.5 bg-white">
-                                <button type="button" onClick={() => setMonthlyNights(m => Math.max(1, m - 1))} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
-                                <span className="font-bold text-sm">{monthlyNights} Mo</span>
-                                <button type="button" onClick={() => setMonthlyNights(m => m + 1)} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"><Plus className="w-4 h-4" /></button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setMonthlyNights((m) => Math.max(1, m - 1))
+                                  }
+                                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="font-bold text-sm">
+                                  {monthlyNights} Mo
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setMonthlyNights((m) => m + 1)}
+                                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
                               </div>
                             </>
                           )}
@@ -687,18 +963,39 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Number of Rooms</label>
+                        <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">
+                          Number of Rooms
+                        </label>
                         <div className="flex items-center justify-between border border-neutral-200 rounded-xl px-2 py-1.5 mt-1.5 bg-white">
-                          <button type="button" onClick={() => setRoomsQuantity(q => Math.max(1, q - 1))} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
-                          <span className="font-bold text-sm">{roomsQuantity} {roomsQuantity > 1 ? 'Rooms' : 'Room'}</span>
-                          <button type="button" onClick={() => setRoomsQuantity(q => q + 1)} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"><Plus className="w-4 h-4" /></button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRoomsQuantity((q) => Math.max(1, q - 1))
+                            }
+                            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="font-bold text-sm">
+                            {roomsQuantity}{" "}
+                            {roomsQuantity > 1 ? "Rooms" : "Room"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setRoomsQuantity((q) => q + 1)}
+                            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     </div>
 
                     {/* SECTION: Guest Info */}
                     <div className="space-y-4 pt-2">
-                      <h4 className="text-[11px] font-bold uppercase text-neutral-400 tracking-widest border-b border-neutral-50 pb-2">Guest Information</h4>
+                      <h4 className="text-[11px] font-bold uppercase text-neutral-400 tracking-widest border-b border-neutral-50 pb-2">
+                        Guest Information
+                      </h4>
 
                       <div className="grid grid-cols-2 gap-3">
                         <input
@@ -729,11 +1026,25 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                       />
 
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-neutral-500 font-semibold border-r border-neutral-200 pr-3">🇵🇭 +63</span>
-                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="917 123 4567" className="w-full pl-24 py-3 border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-neutral-900" required />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-neutral-500 font-semibold border-r border-neutral-200 pr-3">
+                          🇵🇭 +63
+                        </span>
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="917 123 4567"
+                          className="w-full pl-24 py-3 border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-neutral-900"
+                          required
+                        />
                       </div>
 
-                      <input placeholder="Voucher Code (Optional)" value={voucher} onChange={(e) => setVoucher(e.target.value)} className="w-full py-3 px-4 border-neutral-200 rounded-xl text-sm border-dashed bg-neutral-50/50" />
+                      <input
+                        placeholder="Voucher Code (Optional)"
+                        value={voucher}
+                        onChange={(e) => setVoucher(e.target.value)}
+                        className="w-full py-3 px-4 border-neutral-200 rounded-xl text-sm border-dashed bg-neutral-50/50"
+                      />
                     </div>
 
                     {/* Pricing Summary */}
@@ -741,9 +1052,23 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                       <div className="flex justify-between text-sm text-neutral-500">
                         <span>Subtotal</span>
                         <span className="font-medium">
-                          ₱{formatPrice(bookingMode === 'daily'
-                            ? (Number(room.daily_price) * roomsQuantity * (dateRange ? Math.max(1, differenceInDays(dateRange[1], dateRange[0])) : 0))
-                            : (Number(room.monthly_price) * roomsQuantity * monthlyNights)
+                          ₱
+                          {formatPrice(
+                            bookingMode === "daily"
+                              ? Number(room.daily_price) *
+                                  roomsQuantity *
+                                  (dateRange
+                                    ? Math.max(
+                                        1,
+                                        differenceInDays(
+                                          dateRange[1],
+                                          dateRange[0],
+                                        ),
+                                      )
+                                    : 0)
+                              : Number(room.monthly_price) *
+                                  roomsQuantity *
+                                  monthlyNights,
                           )}
                         </span>
                       </div>
@@ -751,15 +1076,23 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                       {voucherType && (
                         <div className="flex justify-between text-sm text-green-600 font-medium bg-green-50 p-2 rounded-lg">
                           <span>Discount ({voucher.toUpperCase()})</span>
-                          <span>-{voucherType === 'percent' ? `${voucherDiscount}%` : `₱${formatPrice(voucherDiscount)}`}</span>
+                          <span>
+                            -
+                            {voucherType === "percent"
+                              ? `${voucherDiscount}%`
+                              : `₱${formatPrice(voucherDiscount)}`}
+                          </span>
                         </div>
                       )}
 
                       <div className="flex justify-between items-baseline pt-2">
-                        <span className="text-sm font-bold text-[#19682e]">Total Price</span>
-<span className="text-2xl font-black text-[#19682e]">
-  ₱{formatPrice(total)}
-</span>                      </div>
+                        <span className="text-sm font-bold text-[#19682e]">
+                          Total Price
+                        </span>
+                        <span className="text-2xl font-black text-[#19682e]">
+                          ₱{formatPrice(total)}
+                        </span>{" "}
+                      </div>
                     </div>
 
                     <motion.button
@@ -776,9 +1109,8 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
             </div>
           </aside>
         </div>
-        
       </div>
-              <Footer />
+      <Footer />
 
       {/* ============================================
           NEW CONFIRMATION MODAL - REPLACEMENT
@@ -799,32 +1131,51 @@ export function RoomDetail({ slug, onBack }: RoomDetailProps) {
                     <CheckCircle2 className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-xl text-neutral-900">Review Your Booking</h3>
-                    <p className="text-xs text-neutral-500">Please verify all details before confirming</p>
+                    <h3 className="font-bold text-xl text-neutral-900">
+                      Review Your Booking
+                    </h3>
+                    <p className="text-xs text-neutral-500">
+                      Please verify all details before confirming
+                    </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setConfirmModalOpen(false)}
-className="p-2 hover:bg-[#19682e]/10 hover:text-[#19682e] rounded-full transition-all duration-300"                >
+                  className="p-2 hover:bg-[#19682e]/10 hover:text-[#19682e] rounded-full transition-all duration-300"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="p-6 space-y-6">
                 {/* Room Summary Card */}
-<div className="bg-gradient-to-br from-[#19682e]/5 to-[#19682e]/10 rounded-2xl p-5 border border-[#19682e]/15">                 
- <div className="flex items-start gap-4">
+                <div className="bg-gradient-to-br from-[#19682e]/5 to-[#19682e]/10 rounded-2xl p-5 border border-[#19682e]/15">
+                  <div className="flex items-start gap-4">
                     <div className="w-20 h-20 rounded-xl bg-neutral-200 overflow-hidden flex-shrink-0">
                       {images[0] && (
-                        <img src={images[0]} alt={room.title} className="w-full h-full object-cover" />
+                        <img
+                          src={images[0]}
+                          alt={room.title}
+                          className="w-full h-full object-cover"
+                        />
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-lg text-neutral-900">{room.title}</h4>
-                      <p className="text-sm text-neutral-500 mb-2">Phase {room.phase} • {room.type}</p>
+                      <h4 className="font-bold text-lg text-neutral-900">
+                        {room.title}
+                      </h4>
+                      <p className="text-sm text-neutral-500 mb-2">
+                        Phase {room.phase} • {room.type}
+                      </p>
                       <div className="flex items-center gap-4 text-xs text-neutral-600">
-                        <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {room.pax} Adults</span>
-                        {room.child! > 0 && <span className="flex items-center gap-1"><Baby className="w-3 h-3" /> {room.child} Children</span>}
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3 h-3" /> {room.pax} Adults
+                        </span>
+                        {room.child! > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Baby className="w-3 h-3" /> {room.child} Children
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -832,91 +1183,124 @@ className="p-2 hover:bg-[#19682e]/10 hover:text-[#19682e] rounded-full transitio
 
                 {/* Booking Details Grid */}
                 <div className="grid grid-cols-2 gap-4">
-<div className="bg-[#19682e]/10 rounded-xl p-4 border border-[#19682e]/20">
-  <div className="flex items-center gap-2 mb-2">
-    <CalendarDays className="w-4 h-4 text-[#19682e]" />
-    <span className="text-xs font-bold uppercase text-[#19682e]">Check-in</span>
-  </div>
+                  <div className="bg-[#19682e]/10 rounded-xl p-4 border border-[#19682e]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CalendarDays className="w-4 h-4 text-[#19682e]" />
+                      <span className="text-xs font-bold uppercase text-[#19682e]">
+                        Check-in
+                      </span>
+                    </div>
                     <p className="font-semibold text-neutral-900">
-                      {dateRange ? format(dateRange[0], 'MMMM dd, yyyy') : '-'}
+                      {dateRange ? format(dateRange[0], "MMMM dd, yyyy") : "-"}
                     </p>
                   </div>
 
-<div className="bg-[#19682e]/10 rounded-xl p-4 border border-[#19682e]/20">
-  <div className="flex items-center gap-2 mb-2">
-    <CalendarDays className="w-4 h-4 text-[#19682e]" />
-    <span className="text-xs font-bold uppercase text-[#19682e]">Check-out</span>
-  </div>
+                  <div className="bg-[#19682e]/10 rounded-xl p-4 border border-[#19682e]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CalendarDays className="w-4 h-4 text-[#19682e]" />
+                      <span className="text-xs font-bold uppercase text-[#19682e]">
+                        Check-out
+                      </span>
+                    </div>
                     <p className="font-semibold text-neutral-900">
-                      {dateRange ? format(dateRange[1], 'MMMM dd, yyyy') : '-'}
+                      {dateRange ? format(dateRange[1], "MMMM dd, yyyy") : "-"}
                     </p>
                   </div>
 
                   <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="w-4 h-4 text-neutral-600" />
-                      <span className="text-xs font-bold uppercase text-neutral-500">Duration</span>
+                      <span className="text-xs font-bold uppercase text-neutral-500">
+                        Duration
+                      </span>
                     </div>
                     <p className="font-semibold text-neutral-900">
-                      {bookingMode === 'daily'
+                      {bookingMode === "daily"
                         ? `${differenceInDays(dateRange![1], dateRange![0])} Nights`
-                        : `${monthlyNights} Month${monthlyNights > 1 ? 's' : ''}`
-                      }
+                        : `${monthlyNights} Month${monthlyNights > 1 ? "s" : ""}`}
                     </p>
                   </div>
 
                   <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
                     <div className="flex items-center gap-2 mb-2">
                       <Building2 className="w-4 h-4 text-neutral-600" />
-                      <span className="text-xs font-bold uppercase text-neutral-500">Rooms</span>
+                      <span className="text-xs font-bold uppercase text-neutral-500">
+                        Rooms
+                      </span>
                     </div>
-                    <p className="font-semibold text-neutral-900">{roomsQuantity} Room{roomsQuantity > 1 ? 's' : ''}</p>
+                    <p className="font-semibold text-neutral-900">
+                      {roomsQuantity} Room{roomsQuantity > 1 ? "s" : ""}
+                    </p>
                   </div>
                 </div>
 
                 {/* Guest Information */}
                 <div className="border border-neutral-200 rounded-2xl overflow-hidden">
-<div className="bg-[#19682e]/5 px-5 py-3 border-b border-[#19682e]/10">
-  <h4 className="text-xs font-bold uppercase text-[#19682e] tracking-wider flex items-center gap-2">
-    <User className="w-4 h-4" /> Guest Information
-  </h4>
-</div>
+                  <div className="bg-[#19682e]/5 px-5 py-3 border-b border-[#19682e]/10">
+                    <h4 className="text-xs font-bold uppercase text-[#19682e] tracking-wider flex items-center gap-2">
+                      <User className="w-4 h-4" /> Guest Information
+                    </h4>
+                  </div>
                   <div className="p-5 space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-neutral-500">Full Name</span>
-                      <span className="font-medium text-neutral-900">{fname} {lname}</span>
+                      <span className="text-sm text-neutral-500">
+                        Full Name
+                      </span>
+                      <span className="font-medium text-neutral-900">
+                        {fname} {lname}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-neutral-500">Email</span>
-                      <span className="font-medium text-neutral-900">{email}</span>
+                      <span className="font-medium text-neutral-900">
+                        {email}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-neutral-500">Phone</span>
-                      <span className="font-medium text-neutral-900">+63 {phone}</span>
+                      <span className="font-medium text-neutral-900">
+                        +63 {phone}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Pricing Breakdown */}
                 <div className="border border-neutral-200 rounded-2xl overflow-hidden">
-<div className="bg-[#19682e]/5 px-5 py-3 border-b border-[#19682e]/10">
-  <h4 className="text-xs font-bold uppercase text-[#19682e] tracking-wider flex items-center gap-2">
-    <Banknote className="w-4 h-4" /> Pricing Details
-  </h4>
-</div>
+                  <div className="bg-[#19682e]/5 px-5 py-3 border-b border-[#19682e]/10">
+                    <h4 className="text-xs font-bold uppercase text-[#19682e] tracking-wider flex items-center gap-2">
+                      <Banknote className="w-4 h-4" /> Pricing Details
+                    </h4>
+                  </div>
                   <div className="p-5 space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-neutral-500">
-                        {bookingMode === 'daily' ? 'Daily Rate' : 'Monthly Rate'} × {roomsQuantity} room{roomsQuantity > 1 ? 's' : ''} × {
-                          bookingMode === 'daily'
-                            ? `${differenceInDays(dateRange![1], dateRange![0])} nights`
-                            : `${monthlyNights} months`
-                        }
+                        {bookingMode === "daily"
+                          ? "Daily Rate"
+                          : "Monthly Rate"}{" "}
+                        × {roomsQuantity} room{roomsQuantity > 1 ? "s" : ""} ×{" "}
+                        {bookingMode === "daily"
+                          ? `${differenceInDays(dateRange![1], dateRange![0])} nights`
+                          : `${monthlyNights} months`}
                       </span>
                       <span className="font-medium text-neutral-900">
-                        ₱{formatPrice(bookingMode === 'daily'
-                          ? (Number(room.daily_price) * roomsQuantity * (dateRange ? Math.max(1, differenceInDays(dateRange[1], dateRange[0])) : 0))
-                          : (Number(room.monthly_price) * roomsQuantity * monthlyNights)
+                        ₱
+                        {formatPrice(
+                          bookingMode === "daily"
+                            ? Number(room.daily_price) *
+                                roomsQuantity *
+                                (dateRange
+                                  ? Math.max(
+                                      1,
+                                      differenceInDays(
+                                        dateRange[1],
+                                        dateRange[0],
+                                      ),
+                                    )
+                                  : 0)
+                            : Number(room.monthly_price) *
+                                roomsQuantity *
+                                monthlyNights,
                         )}
                       </span>
                     </div>
@@ -928,15 +1312,22 @@ className="p-2 hover:bg-[#19682e]/10 hover:text-[#19682e] rounded-full transitio
                           Discount ({voucher.toUpperCase()})
                         </span>
                         <span className="font-medium">
-                          -{voucherType === 'percent' ? `${voucherDiscount}%` : `₱${formatPrice(voucherDiscount)}`}
+                          -
+                          {voucherType === "percent"
+                            ? `${voucherDiscount}%`
+                            : `₱${formatPrice(voucherDiscount)}`}
                         </span>
                       </div>
                     )}
 
                     <div className="border-t border-neutral-200 pt-3 mt-3">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-neutral-900">Total Amount</span>
-                        <span className="text-2xl font-black text-neutral-900">₱{formatPrice(total)}</span>
+                        <span className="font-bold text-neutral-900">
+                          Total Amount
+                        </span>
+                        <span className="text-2xl font-black text-neutral-900">
+                          ₱{formatPrice(total)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -946,13 +1337,15 @@ className="p-2 hover:bg-[#19682e]/10 hover:text-[#19682e] rounded-full transitio
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setConfirmModalOpen(false)}
-className="flex-1 py-4 px-6 border-2 border-[#19682e]/20 text-[#19682e] rounded-2xl font-bold hover:bg-[#19682e] hover:text-white hover:border-[#19682e] transition-all duration-300"                  >
+                    className="flex-1 py-4 px-6 border-2 border-[#19682e]/20 text-[#19682e] rounded-2xl font-bold hover:bg-[#19682e] hover:text-white hover:border-[#19682e] transition-all duration-300"
+                  >
                     Edit Details
                   </button>
                   <button
                     onClick={handleConfirmBooking}
                     disabled={isSubmitting}
-className="flex-[2] py-4 px-6 bg-[#19682e] text-white rounded-2xl font-bold hover:bg-[#145625] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"                  >
+                    className="flex-[2] py-4 px-6 bg-[#19682e] text-white rounded-2xl font-bold hover:bg-[#145625] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -971,7 +1364,6 @@ className="flex-[2] py-4 px-6 bg-[#19682e] text-white rounded-2xl font-bold hove
           </div>
         )}
       </AnimatePresence>
-
-          </motion.div>
+    </motion.div>
   );
 }
